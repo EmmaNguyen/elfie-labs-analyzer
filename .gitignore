@@ -182,3 +182,4 @@ demo-pdfs/sample-lab-results.txt
 *.pem
 *.key
 secrets/
+.vercel

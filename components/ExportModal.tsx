@@ -61,11 +61,11 @@ export default function ExportModal({ results, onClose }: ExportModalProps) {
       }
 
       pdf.setFontSize(12)
-      pdf.setFont(undefined, 'bold')
+      pdf.setFont('helvetica', 'bold')
       pdf.text(result.test_name, margin, yPosition)
       yPosition += 8
 
-      pdf.setFont(undefined, 'normal')
+      pdf.setFont('helvetica', 'normal')
       pdf.setFontSize(10)
       pdf.text(`Value: ${result.value} ${result.unit || ''}`, margin + 5, yPosition)
       yPosition += 6
@@ -99,10 +99,10 @@ export default function ExportModal({ results, onClose }: ExportModalProps) {
     pdf.addPage()
     yPosition = margin
     pdf.setFontSize(12)
-    pdf.setFont(undefined, 'bold')
+    pdf.setFont('helvetica', 'bold')
     pdf.text('Important Notice', margin, yPosition)
     yPosition += 10
-    pdf.setFont(undefined, 'normal')
+    pdf.setFont('helvetica', 'normal')
     pdf.setFontSize(10)
     const disclaimer = 'This AI-generated summary is for educational purposes only and is not a substitute for professional medical advice. Do not make medical decisions based solely on this output. Always consult with your healthcare provider for proper diagnosis and treatment.'
     const disclaimerLines = pdf.splitTextToSize(disclaimer, pageWidth - margin * 2)
