@@ -23,8 +23,9 @@ export default function HomePage() {
       setAnalysisResults(results)
     } catch (error) {
       console.error('Error processing PDF:', error)
+      console.error('Error details:', JSON.stringify(error))
       // Show error to user
-      alert(error instanceof Error ? error.message : 'Failed to analyze PDF')
+      alert(error instanceof Error ? error.message : 'Failed to analyze PDF. Please try again.')
     } finally {
       setIsProcessing(false)
     }

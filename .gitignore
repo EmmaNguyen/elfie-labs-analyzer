@@ -169,6 +169,7 @@ Thumbs.db
 # PDF files (temporary uploads)
 *.pdf
 temp_pdfs/
+!demo-pdfs/*.pdf
 
 # Demo files (keep sample data)
 demo-pdfs/sample-lab-results.txt
