@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: elfie-labs-analyzer-backend
+    runtime: python
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: QWEN_API_KEY
+        sync: false
