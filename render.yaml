@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: elfie-labs-analyzer-backend
+    name: elfie-labs-backend-api
     runtime: python
     plan: free
     buildCommand: pip install -r backend/requirements.txt
