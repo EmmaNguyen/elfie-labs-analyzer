@@ -12,7 +12,11 @@ import { Upload, FileText, Loader2, AlertCircle } from 'lucide-react'
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css'
 import 'react-pdf/dist/esm/Page/TextLayer.css'
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
+// Prefer bundling the worker to avoid CDN/network/CSP issues that can break previews (and feel like "upload" is broken).
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.js',
+  import.meta.url
+).toString()
 
 interface PDFUploadProps {
   onFileUpload: (file: File) => void
@@ -25,9 +29,15 @@ export default function PDFUpload({ onFileUpload, isProcessing }: PDFUploadProps
   const [numPages, setNumPages] = useState<number>(0)
   const [error, setError] = useState<string>('')
 
+  const isProbablyPdf = useCallback((file: File) => {
+    const fileName = (file?.name || '').toLowerCase()
+    const fileType = (file?.type || '').toLowerCase()
+    return fileType === 'application/pdf' || fileName.endsWith('.pdf')
+  }, [])
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0]
-    if (file && file.type === 'application/pdf') {
+    if (file && isProbablyPdf(file)) {
       setSelectedFile(file)
       setError('')
       const reader = new FileReader()
@@ -36,12 +46,18 @@ export default function PDFUpload({ onFileUpload, isProcessing }: PDFUploadProps
       }
       reader.readAsDataURL(file)
     } else {
-      setError('Please upload a valid PDF file')
+      setError('Please upload a valid PDF file (.pdf)')
     }
-  }, [])
+  }, [isProbablyPdf])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
+    onDropRejected: (fileRejections) => {
+      const message =
+        fileRejections[0]?.errors?.[0]?.message ||
+        'File not accepted. Please upload a PDF file (.pdf).'
+      setError(message)
+    },
     accept: {
       'application/pdf': ['.pdf']
     },

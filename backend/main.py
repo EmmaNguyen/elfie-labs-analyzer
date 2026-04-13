@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import PyPDF2
@@ -13,7 +13,14 @@ app = FastAPI(title="Elfie AI Labs Analyzer API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://elfie-labs-analyzer.vercel.app", "https://elfie-labs-analyzer-api.onrender.com"],
+    # Allow local dev + Vercel deployments (including preview URLs)
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://elfie-labs-analyzer.vercel.app",
+        "https://elfie-labs-analyzer-api.onrender.com",
+    ],
+    allow_origin_regex=r"^https://.*\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -305,7 +312,7 @@ def enhance_lab_data_with_fallback(lab_data: List[Dict], language: str) -> List[
     return enhanced_data
 
 @app.post("/analyze-pdf")
-async def analyze_pdf(pdf_file: UploadFile = File(...), language: str = "en"):
+async def analyze_pdf(pdf_file: UploadFile = File(...), language: str = Form("en")):
     """Analyze lab PDF and return structured results"""
     
     if not pdf_file.filename.lower().endswith('.pdf'):

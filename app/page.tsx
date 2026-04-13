@@ -19,11 +19,53 @@ export default function HomePage() {
     setIsProcessing(true)
     
     try {
-      const results = await analyzePDF(file, currentLanguage)
+      console.log('=== Starting PDF upload ===')
+      console.log('File name:', file.name)
+      console.log('File type:', file.type)
+      console.log('File size:', file.size)
+      console.log('Language:', currentLanguage)
+      
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      console.log('API_BASE_URL from env:', process.env.NEXT_PUBLIC_API_URL)
+      console.log('API_BASE_URL fallback:', 'http://localhost:8000')
+      console.log('Final API_BASE_URL:', API_BASE_URL)
+      console.log('Full URL:', `${API_BASE_URL}/analyze-pdf`)
+      
+      // Add direct API call as fallback
+      console.log('Attempting direct fetch to:', `${API_BASE_URL}/analyze-pdf`)
+      
+      const formData = new FormData()
+      formData.append('pdf_file', file)
+      formData.append('language', currentLanguage)
+      
+      const response = await fetch(`${API_BASE_URL}/analyze-pdf`, {
+        method: 'POST',
+        body: formData,
+      })
+      
+      console.log('Fetch response status:', response.status)
+      console.log('Fetch response ok:', response.ok)
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Fetch error response:', errorText)
+        throw new Error(`HTTP ${response.status}: ${errorText}`)
+      }
+      
+      const results = await response.json()
+      console.log('=== PDF analysis successful ===')
+      console.log('Results:', results)
       setAnalysisResults(results)
     } catch (error) {
-      console.error('Error processing PDF:', error)
-      console.error('Error details:', JSON.stringify(error))
+      console.error('=== Error processing PDF ===')
+      console.error('Error object:', error)
+      console.error('Error type:', typeof error)
+      console.error('Error message:', error instanceof Error ? error.message : 'No message')
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack')
+      if (error && typeof error === 'object') {
+        console.error('Error keys:', Object.keys(error))
+        console.error('Error stringified:', JSON.stringify(error))
+      }
       // Show error to user
       alert(error instanceof Error ? error.message : 'Failed to analyze PDF. Please try again.')
     } finally {

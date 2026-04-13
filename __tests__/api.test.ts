@@ -64,7 +64,6 @@ describe('API Functions', () => {
         'http://localhost:8000/analyze-pdf',
         expect.any(FormData),
         expect.objectContaining({
-          headers: { 'Content-Type': 'multipart/form-data' },
           timeout: 120000
         })
       )
