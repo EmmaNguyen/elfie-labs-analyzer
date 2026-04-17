@@ -12,11 +12,8 @@ import { Upload, FileText, Loader2, AlertCircle } from 'lucide-react'
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css'
 import 'react-pdf/dist/esm/Page/TextLayer.css'
 
-// Prefer bundling the worker to avoid CDN/network/CSP issues that can break previews (and feel like "upload" is broken).
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.js',
-  import.meta.url
-).toString()
+// Use CDN worker to avoid Next.js bundling issues
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
 
 interface PDFUploadProps {
   onFileUpload: (file: File) => void
