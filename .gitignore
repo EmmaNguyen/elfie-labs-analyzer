@@ -171,6 +171,11 @@ Thumbs.db
 temp_pdfs/
 !demo-pdfs/*.pdf
 
+# Test output files
+*_analysis.json
+*_first_page.json
+test_speech.mp3
+
 # Demo files (keep sample data)
 demo-pdfs/sample-lab-results.txt
 
