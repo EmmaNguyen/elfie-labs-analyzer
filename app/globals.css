@@ -4,26 +4,28 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Warmer, softer colors for seniors */
+    --background: 45 30% 97%;
+    --foreground: 25 15% 15%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 25 15% 15%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    --popover-foreground: 25 15% 15%;
+    /* Softer blue - easier on the eyes */
+    --primary: 210 60% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 40 25% 94%;
+    --secondary-foreground: 25 15% 15%;
+    --muted: 40 20% 92%;
+    --muted-foreground: 25 10% 45%;
+    --accent: 40 30% 90%;
+    --accent-foreground: 25 15% 15%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 40 20% 85%;
+    --input: 40 20% 85%;
+    --ring: 210 60% 45%;
+    --radius: 1rem;
   }
 
   .dark {
@@ -177,5 +179,26 @@
   .upload-area.drag-active {
     border-color: rgb(59 130 246);
     background-color: rgb(239 246 255);
+  }
+
+  /* Senior-friendly enhancements */
+  .senior-card {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 2px solid rgba(0, 0, 0, 0.06);
+    border-radius: 1.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .senior-card:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+  }
+
+  .warm-gradient {
+    background: linear-gradient(135deg, #fef9f3 0%, #f5f0e8 100%);
+  }
+
+  .soft-shadow {
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.06);
   }
 }

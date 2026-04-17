@@ -200,31 +200,40 @@ export default function HomePage() {
   ]
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      {/* Header - Larger text for better visibility */}
-      <header className="text-center mb-12">
-        <h1 className="text-5xl font-bold text-gray-900 mb-4">
-          Elfie AI Labs Analyzer
-        </h1>
-        <p className="text-2xl text-gray-700">
-          Transform complex lab results into clear, patient-friendly insights
-        </p>
-      </header>
+    <div className="min-h-screen warm-gradient">
+      <div className="container mx-auto py-12 px-4">
+        {/* Header - Warmer, more inviting */}
+        <header className="text-center mb-16">
+          <div className="inline-block mb-6">
+            <span className="text-7xl">🏥</span>
+          </div>
+          <h1 className="text-6xl font-bold text-gray-800 mb-4 tracking-tight">
+            Elfie AI Labs Analyzer
+          </h1>
+          <div className="w-24 h-1 bg-blue-500 mx-auto mb-6 rounded-full"></div>
+          <p className="text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            Transform complex lab results into clear, patient-friendly insights
+          </p>
+        </header>
 
-      {/* Language Selector - Larger buttons */}
-      <div className="flex justify-center mb-8">
-        <Card className="w-fit">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <Languages className="h-6 w-6 text-gray-600" />
-              <div className="flex gap-3">
+      {/* Language Selector - Larger buttons with better styling */}
+      <div className="flex justify-center mb-12">
+        <Card className="w-fit senior-card">
+          <CardContent className="p-8">
+            <div className="flex items-center gap-6">
+              <Languages className="h-8 w-8 text-blue-600" />
+              <div className="flex gap-4">
                 {languages.map((lang) => (
                   <Button
                     key={lang.code}
                     variant={currentLanguage === lang.code ? "default" : "outline"}
                     size="lg"
                     onClick={() => setCurrentLanguage(lang.code)}
-                    className="text-lg px-6 py-5"
+                    className={`text-lg px-8 py-6 ${
+                      currentLanguage === lang.code 
+                        ? 'shadow-lg' 
+                        : 'hover:bg-white hover:shadow-md'
+                    }`}
                   >
                     {lang.name}
                   </Button>
@@ -238,12 +247,12 @@ export default function HomePage() {
       {!analysisResults ? (
         <PDFUpload onFileUpload={handleFileUpload} isProcessing={isProcessing} />
       ) : (
-        <div className="space-y-8">
-          {/* Results Header - Larger text and buttons */}
-          <Card>
-            <CardHeader>
+        <div className="space-y-10">
+          {/* Results Header - Enhanced styling */}
+          <Card className="senior-card">
+            <CardHeader className="pb-6">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-3xl">Analysis Results</CardTitle>
+                <CardTitle className="text-4xl text-gray-800">Analysis Results</CardTitle>
                 <div className="flex gap-3">
                   <Button 
                     variant="outline" 
@@ -288,41 +297,41 @@ export default function HomePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Summary Statistics - Larger and clearer */}
-              <div className="grid grid-cols-4 gap-6 mb-8">
-                <div className="text-center p-6 bg-gray-100 rounded-xl border-2 border-gray-300">
-                  <div className="text-4xl font-bold text-gray-900 mb-2">
+              {/* Summary Statistics - Beautiful cards with icons */}
+              <div className="grid grid-cols-4 gap-8 mb-10">
+                <div className="text-center p-8 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border-2 border-gray-200 shadow-md">
+                  <div className="text-5xl font-bold text-gray-800 mb-3">
                     {analysisResults.summary.total_tests}
                   </div>
                   <div className="text-xl font-semibold text-gray-700">Total Tests</div>
                 </div>
-                <div className="text-center p-6 bg-green-100 rounded-xl border-2 border-green-400">
-                  <div className="text-4xl font-bold text-green-700 mb-2">
+                <div className="text-center p-8 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl border-2 border-green-300 shadow-md">
+                  <div className="text-5xl font-bold text-green-700 mb-3">
                     {analysisResults.summary.normal}
                   </div>
-                  <div className="text-xl font-semibold text-green-800">Normal</div>
+                  <div className="text-xl font-semibold text-green-800">✓ Normal</div>
                 </div>
-                <div className="text-center p-6 bg-yellow-100 rounded-xl border-2 border-yellow-400">
-                  <div className="text-4xl font-bold text-yellow-700 mb-2">
+                <div className="text-center p-8 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl border-2 border-yellow-300 shadow-md">
+                  <div className="text-5xl font-bold text-yellow-700 mb-3">
                     {analysisResults.summary.abnormal}
                   </div>
-                  <div className="text-xl font-semibold text-yellow-800">Abnormal</div>
+                  <div className="text-xl font-semibold text-yellow-800">⚠ Abnormal</div>
                 </div>
-                <div className="text-center p-6 bg-red-100 rounded-xl border-2 border-red-400">
-                  <div className="text-4xl font-bold text-red-700 mb-2">
+                <div className="text-center p-8 bg-gradient-to-br from-red-50 to-red-100 rounded-2xl border-2 border-red-300 shadow-md">
+                  <div className="text-5xl font-bold text-red-700 mb-3">
                     {analysisResults.summary.critical}
                   </div>
-                  <div className="text-xl font-semibold text-red-800">Critical</div>
+                  <div className="text-xl font-semibold text-red-800">🔴 Critical</div>
                 </div>
               </div>
 
               <div className="text-lg text-gray-600 mb-4 font-medium">
                 Showing {analysisResults.results.length} test results
               </div>
-              <div className="space-y-6">
+              <div className="space-y-8">
                 {analysisResults.results.map((result: LabResult, index: number) => (
-                  <Card key={`${result.test_name}-${index}`} className="border-l-8 border-l-blue-600 shadow-lg">
-                    <CardContent className="p-8">
+                  <Card key={`${result.test_name}-${index}`} className="senior-card border-l-8 border-l-blue-500">
+                    <CardContent className="p-10">
                       {/* Header with number, name, and value - Larger for seniors */}
                       <div className="flex items-start justify-between mb-6">
                         <div className="flex-1">
@@ -335,23 +344,23 @@ export default function HomePage() {
                             </h3>
                           </div>
                           
-                          {/* Value, Unit, Reference Range, and Status - Larger text */}
-                          <div className="flex flex-wrap items-center gap-4 ml-16">
-                            <span className="text-4xl font-bold text-gray-900">
+                          {/* Value, Unit, Reference Range, and Status - Larger text with better styling */}
+                          <div className="flex flex-wrap items-center gap-6 ml-16">
+                            <span className="text-5xl font-bold text-gray-900">
                               {result.value}
                             </span>
-                            <span className="text-2xl text-gray-700 font-semibold">
+                            <span className="text-3xl text-gray-600 font-semibold">
                               {result.unit}
                             </span>
-                            <span className="text-2xl text-gray-500">|</span>
+                            <span className="text-3xl text-gray-400">|</span>
                             <span className="text-xl text-gray-600">
-                              Ref: <span className="font-bold text-gray-800">{result.reference_range}</span>
+                              Ref: <span className="font-bold text-gray-800 text-lg">{result.reference_range}</span>
                             </span>
-                            <Badge className={`${getStatusColor(result.status)} text-white text-lg px-4 py-2`}>
+                            <Badge className={`${getStatusColor(result.status)} text-white text-lg px-5 py-2.5 shadow-sm`}>
                               {result.status}
                             </Badge>
                             {result.severity_tier !== 'None' && (
-                              <Badge className={`${getSeverityColor(result.severity_tier)} text-lg px-4 py-2`}>
+                              <Badge className={`${getSeverityColor(result.severity_tier)} text-lg px-5 py-2.5 shadow-sm`}>
                                 {result.severity_tier}
                               </Badge>
                             )}
@@ -376,18 +385,20 @@ export default function HomePage() {
                         </div>
                       </div>
                       
-                      {/* Explanation and Next Steps - Larger text */}
-                      <div className="grid md:grid-cols-2 gap-6 ml-16">
-                        <div className="bg-blue-50 p-6 rounded-xl border-2 border-blue-200">
-                          <h4 className="font-bold text-blue-900 mb-3 text-xl">
+                      {/* Explanation and Next Steps - Beautiful colored boxes */}
+                      <div className="grid md:grid-cols-2 gap-8 ml-16 mt-8">
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-2xl border-2 border-blue-200 shadow-sm">
+                          <h4 className="font-bold text-blue-900 mb-4 text-xl flex items-center gap-3">
+                            <span className="text-2xl">💡</span>
                             What this means
                           </h4>
                           <p className="text-lg text-blue-800 leading-relaxed">
                             {result.patient_explanation}
                           </p>
                         </div>
-                        <div className="bg-green-50 p-6 rounded-xl border-2 border-green-200">
-                          <h4 className="font-bold text-green-900 mb-3 text-xl">
+                        <div className="bg-gradient-to-br from-green-50 to-green-100 p-8 rounded-2xl border-2 border-green-200 shadow-sm">
+                          <h4 className="font-bold text-green-900 mb-4 text-xl flex items-center gap-3">
+                            <span className="text-2xl">👉</span>
                             Next steps
                           </h4>
                           <p className="text-lg text-green-800 leading-relaxed">
@@ -400,11 +411,14 @@ export default function HomePage() {
                 ))}
               </div>
 
-              <div className="mt-6 flex justify-center">
+              <div className="mt-8 flex justify-center">
                 <Button 
                   onClick={() => setAnalysisResults(null)}
                   variant="outline"
+                  size="lg"
+                  className="text-lg px-8 py-6 shadow-md hover:shadow-lg transition-shadow"
                 >
+                  <span className="text-xl mr-2">📄</span>
                   Analyze Another PDF
                 </Button>
               </div>
@@ -413,8 +427,10 @@ export default function HomePage() {
         </div>
       )}
 
-      <footer className="mt-16 text-center text-sm text-gray-500">
-        <p>
+      {/* Footer - Softer, more prominent */}
+      <footer className="mt-20 text-center">
+        <div className="w-16 h-0.5 bg-gray-300 mx-auto mb-6 rounded-full"></div>
+        <p className="text-base text-gray-600 max-w-3xl mx-auto leading-relaxed">
           © 2024 Elfie AI Labs Analyzer. This tool provides educational insights only and is not a substitute for professional medical advice.
         </p>
       </footer>
@@ -425,6 +441,7 @@ export default function HomePage() {
           onClose={() => setShowExportModal(false)} 
         />
       )}
+      </div>
     </div>
   )
 }
