@@ -576,13 +576,15 @@ async def analyze_pdf(
         print(f"[DEBUG] Qwen-VL response keys: {qwen_vl_result.keys() if isinstance(qwen_vl_result, dict) else 'not a dict'}")
         
         # Parse the extracted lab data
+        lab_data = []
+        extracted_text_preview = ""
         try:
             content = qwen_vl_result["output"]["choices"][0]["message"]["content"]
             print(f"[DEBUG] Qwen-VL content (first 200 chars): {content[:200]}")
+            extracted_text_preview = content[:500]
             lab_data = json.loads(content)
-            print(f"[DEBUG] Parsed lab_data keys: {lab_data.keys() if isinstance(lab_data, dict) else 'not a dict'}")
-            if isinstance(lab_data, dict) and 'tests' in lab_data:
-                print(f"[DEBUG] Number of tests extracted: {len(lab_data['tests'])}")
+            print(f"[DEBUG] Parsed lab_data type: {type(lab_data).__name__}")
+            print(f"[DEBUG] Parsed lab_data length: {len(lab_data) if isinstance(lab_data, list) else 'not a list'}")
         except (KeyError, json.JSONDecodeError) as e:
             print(f"[DEBUG] Failed to parse Qwen-VL response: {e}")
             # Use fallback data
@@ -627,10 +629,10 @@ async def analyze_pdf(
             "debug": {
                 "pdf_size": len(pdf_content),
                 "pdf2image_available": PDF2IMAGE_AVAILABLE,
-                "qwen_vl_response_keys": list(qwen_vl_result.keys()) if isinstance(qwen_vl_result, dict) else "not_dict",
+                "extracted_text_preview": extracted_text_preview[:300],
                 "lab_data_type": type(lab_data).__name__,
-                "lab_data_keys": list(lab_data.keys()) if isinstance(lab_data, dict) else "not_dict",
-                "lab_data_tests_count": len(lab_data.get('tests', [])) if isinstance(lab_data, dict) else 0,
+                "lab_data_length": len(lab_data) if isinstance(lab_data, list) else 0,
+                "lab_data_preview": lab_data[:2] if isinstance(lab_data, list) and len(lab_data) > 0 else [],
                 "enhanced_results_count": len(enhanced_results),
                 "normalized_results_count": len(normalized_results)
             }
