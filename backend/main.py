@@ -340,6 +340,9 @@ async def call_qwen_vl(pdf_content: bytes, language: str, first_page_only: bool 
         max_pages = 1 if first_page_only else None
         pdf_text = await extract_text_with_qwen_vl(pdf_content, language, max_pages=max_pages)
         
+        print(f"[call_qwen_vl] Extracted text length: {len(pdf_text)} chars")
+        print(f"[call_qwen_vl] Extracted text preview: {pdf_text[:300]}")
+        
         if not pdf_text.strip():
             raise ValueError("No text could be extracted from PDF")
         
@@ -352,10 +355,11 @@ async def call_qwen_vl(pdf_content: bytes, language: str, first_page_only: bool 
         
         for i, page in enumerate(pages[1:], 1):  # Skip first empty split
             page_text = f"--- Page {page}"
-            print(f"  Parsing page {i}...")
+            print(f"  Parsing page {i}, text length: {len(page_text)} chars")
             
             try:
                 page_lab_data = await parse_lab_data_with_qwen(page_text, language)
+                print(f"  Page {i} parsing result: {len(page_lab_data)} tests")
                 if page_lab_data:
                     all_lab_data.extend(page_lab_data)
                     print(f"    Found {len(page_lab_data)} tests on page {i}")
@@ -371,7 +375,8 @@ async def call_qwen_vl(pdf_content: bytes, language: str, first_page_only: bool 
                 "choices": [
                     {
                         "message": {
-                            "content": json.dumps(all_lab_data)
+                            "content": json.dumps(all_lab_data),
+                            "debug_extracted_text": pdf_text[:500]  # Include for debugging
                         }
                     }
                 ]
@@ -579,9 +584,11 @@ async def analyze_pdf(
         lab_data = []
         extracted_text_preview = ""
         try:
-            content = qwen_vl_result["output"]["choices"][0]["message"]["content"]
+            message = qwen_vl_result["output"]["choices"][0]["message"]
+            content = message["content"]
+            # Extract debug text if available
+            extracted_text_preview = message.get("debug_extracted_text", "")
             print(f"[DEBUG] Qwen-VL content (first 200 chars): {content[:200]}")
-            extracted_text_preview = content[:500]
             lab_data = json.loads(content)
             print(f"[DEBUG] Parsed lab_data type: {type(lab_data).__name__}")
             print(f"[DEBUG] Parsed lab_data length: {len(lab_data) if isinstance(lab_data, list) else 'not a list'}")
