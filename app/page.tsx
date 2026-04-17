@@ -20,11 +20,14 @@ export default function HomePage() {
 
   const generateSpeech = async (text: string) => {
     try {
+      console.log('Generating speech for:', text.substring(0, 50) + '...')
+      
       // Stop any currently playing audio first
       stopSpeaking()
       
       setIsSpeaking(true)
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      console.log('Using API:', API_BASE_URL)
       
       const formData = new FormData()
       formData.append('text', text)
@@ -32,25 +35,50 @@ export default function HomePage() {
       formData.append('voice_id', 'Cherry')
       formData.append('language', currentLanguage)
       
+      console.log('Sending TTS request...')
       const response = await fetch(`${API_BASE_URL}/text-to-speech`, {
         method: 'POST',
         body: formData,
       })
       
+      console.log('Response status:', response.status)
+      
       if (!response.ok) {
-        throw new Error('Failed to generate speech')
+        throw new Error(`Failed to generate speech: ${response.status}`)
       }
       
       const audioBlob = await response.blob()
+      console.log('Audio blob size:', audioBlob.size, 'bytes')
+      
       const url = URL.createObjectURL(audioBlob)
       setAudioUrl(url)
+      console.log('Audio URL created:', url)
       
       const audio = new Audio(url)
       setCurrentAudio(audio)
-      audio.play()
+      
+      console.log('Playing audio...')
+      const playPromise = audio.play()
+      
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          console.log('Audio playing successfully')
+        }).catch(error => {
+          console.error('Audio play error:', error)
+          alert('Could not play audio. Please click the button again.')
+          setIsSpeaking(false)
+        })
+      }
+      
       audio.onended = () => {
+        console.log('Audio finished playing')
         setIsSpeaking(false)
         setCurrentAudio(null)
+      }
+      
+      audio.onerror = (e) => {
+        console.error('Audio error:', e)
+        setIsSpeaking(false)
       }
     } catch (error) {
       console.error('Error generating speech:', error)
@@ -113,6 +141,9 @@ export default function HomePage() {
       const results = await response.json()
       console.log('=== PDF analysis successful ===')
       console.log('Results:', results)
+      console.log('Number of tests:', results.summary?.total_tests)
+      console.log('Results array length:', results.results?.length)
+      console.log('First result:', results.results?.[0])
       setAnalysisResults(results)
     } catch (error) {
       console.error('=== Error processing PDF ===')
@@ -269,6 +300,9 @@ export default function HomePage() {
                 </div>
               </div>
 
+              <div className="text-sm text-gray-500 mb-2">
+                Rendering {analysisResults.results.length} test results
+              </div>
               <div className="space-y-4">
                 {analysisResults.results.map((result: LabResult, index: number) => (
                   <Card key={index} className="border-l-4 border-l-blue-500">

@@ -664,7 +664,15 @@ async def text_to_speech_qwen(text: str, voice: str = "Cherry", language: str = 
                     # Fetch the audio file from the URL
                     audio_response = requests.get(audio_url, timeout=30)
                     if audio_response.status_code == 200:
-                        return Response(content=audio_response.content, media_type="audio/mpeg")
+                        # Detect audio format from content
+                        content = audio_response.content
+                        if content.startswith(b'RIFF') and b'WAVE' in content[:12]:
+                            media_type = "audio/wav"
+                        elif content.startswith(b'\xff\xf3') or content.startswith(b'\xff\xfb') or content.startswith(b'ID3'):
+                            media_type = "audio/mpeg"
+                        else:
+                            media_type = "audio/mpeg"  # default
+                        return Response(content=content, media_type=media_type)
                     else:
                         raise HTTPException(status_code=500, detail="Failed to fetch audio from URL")
                 else:
