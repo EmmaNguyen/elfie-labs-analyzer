@@ -1,6 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 import PyPDF2
 import io
 import json
@@ -373,7 +373,87 @@ async def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
 @app.post("/text-to-speech")
-async def text_to_speech(text: str = Form(...), voice_id: str = Form("CwhRBWXzGAHq8TQ4Fs17")):
+async def text_to_speech(
+    text: str = Form(...),
+    provider: str = Form("qwen"),
+    voice_id: str = Form("Cherry"),
+    language: str = Form("en")
+):
+    """Convert text to speech using Qwen TTS or ElevenLabs API"""
+    
+    if provider == "qwen":
+        return await text_to_speech_qwen(text, voice_id, language)
+    else:
+        return await text_to_speech_elevenlabs(text, voice_id)
+
+
+async def text_to_speech_qwen(text: str, voice: str = "Cherry", language: str = "en"):
+    """Convert text to speech using Qwen TTS API"""
+    try:
+        # Map language codes
+        language_map = {
+            "en": "English",
+            "zh": "Chinese",
+            "fr": "French",
+            "ar": "Arabic",
+            "vi": "Vietnamese"
+        }
+        language_type = language_map.get(language, "English")
+        
+        # Available voices: Cherry, Serena, Ethan, Jasmine, etc.
+        headers = {
+            "Authorization": f"Bearer {QWEN_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "model": "qwen3-tts-flash",
+            "input": {
+                "text": text,
+                "voice": voice,
+                "language_type": language_type
+            }
+        }
+        
+        # Qwen TTS uses the multimodal generation endpoint
+        response = requests.post(
+            QWEN_VL_URL,
+            headers=headers,
+            json=payload,
+            timeout=60
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            
+            # Qwen TTS returns audio URL in output.audio.url
+            if "output" in result and "audio" in result["output"]:
+                audio_url = result["output"]["audio"].get("url")
+                if audio_url:
+                    # Fetch the audio file from the URL
+                    audio_response = requests.get(audio_url, timeout=30)
+                    if audio_response.status_code == 200:
+                        return Response(content=audio_response.content, media_type="audio/mpeg")
+                    else:
+                        raise HTTPException(status_code=500, detail="Failed to fetch audio from URL")
+                else:
+                    raise HTTPException(status_code=500, detail="No audio URL in Qwen TTS response")
+            else:
+                raise HTTPException(status_code=500, detail="Invalid response format from Qwen TTS")
+        elif response.status_code == 401:
+            raise HTTPException(status_code=401, detail="Invalid Qwen API key for TTS")
+        else:
+            raise HTTPException(status_code=response.status_code, detail=f"Qwen TTS API error: {response.text}")
+            
+    except requests.exceptions.Timeout:
+        raise HTTPException(status_code=504, detail="Qwen TTS request timed out")
+    except Exception as e:
+        import traceback
+        print(f"Qwen TTS Error: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Qwen TTS failed: {str(e)}")
+
+
+async def text_to_speech_elevenlabs(text: str, voice_id: str = "CwhRBWXzGAHq8TQ4Fs17"):
     """Convert text to speech using ElevenLabs API"""
     try:
         ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
