@@ -24,6 +24,15 @@ if env_path.exists():
 import requests
 import PyPDF2
 from io import BytesIO
+import base64
+
+# Try to import PIL for image conversion
+try:
+    from PIL import Image
+    PIL_AVAILABLE = True
+except ImportError:
+    PIL_AVAILABLE = False
+    print("Warning: PIL not available. Install with: pip install Pillow")
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
@@ -81,30 +90,106 @@ def test_pdf_file(pdf_path: str, language: str = "en"):
         print_test_result("Backend is healthy", False, str(e))
         sys.exit(1)
     
-    # Extract and display raw text from PDF
-    print_header("EXTRACTED TEXT FROM PDF")
+    # Extract text using Qwen-VL from JPG conversion
+    print_header("EXTRACTING TEXT USING QWEN-VL (PDF → JPG → AI)")
+    
     try:
+        # Read PDF and convert to images
         with open(pdf_file, 'rb') as f:
-            pdf_reader = PyPDF2.PdfReader(f)
-            extracted_text = ""
-            for page_num, page in enumerate(pdf_reader.pages, 1):
-                page_text = page.extract_text()
-                if page_text:
-                    extracted_text += f"\n--- Page {page_num} ---\n{page_text}\n"
+            pdf_content = f.read()
+        
+        pdf_reader = PyPDF2.PdfReader(BytesIO(pdf_content))
+        num_pages = len(pdf_reader.pages)
+        print(f"  PDF has {num_pages} page(s)")
+        
+        # For each page, extract using Qwen-VL
+        all_extracted_text = []
+        
+        for page_num in range(num_pages):
+            print(f"\n  Processing page {page_num + 1}/{num_pages}...")
             
-            if extracted_text.strip():
-                # Show first 1000 characters
-                preview = extracted_text[:1000]
-                if len(extracted_text) > 1000:
-                    preview += f"\n\n... [{len(extracted_text) - 1000} more characters]"
-                print(preview)
-                print(f"\n  Total characters extracted: {len(extracted_text)}")
-                print(f"  Total pages: {len(pdf_reader.pages)}")
-            else:
-                print("  ⚠️  No text could be extracted from PDF")
-                print("  The PDF may be scanned images or have no extractable text.")
+            # Convert PDF page to image using pdf2image if available
+            try:
+                from pdf2image import convert_from_path
+                images = convert_from_path(pdf_file, first_page=page_num + 1, last_page=page_num + 1)
+                if images:
+                    img = images[0]
+                    # Convert to bytes
+                    img_buffer = BytesIO()
+                    img.save(img_buffer, format='JPEG')
+                    img_bytes = img_buffer.getvalue()
+                else:
+                    raise Exception("No image generated")
+            except ImportError:
+                print("    ⚠️  pdf2image not available, using direct PDF bytes")
+                print("    Install with: pip install pdf2image poppler-utils")
+                # Fallback: use PDF bytes directly
+                img_bytes = pdf_content
+            
+            # Use Qwen-VL to extract text from image
+            img_base64 = base64.b64encode(img_bytes).decode('utf-8')
+            
+            headers = {
+                "Authorization": f"Bearer {os.getenv('QWEN_API_KEY', '')}",
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "model": "qwen-vl-plus",
+                "input": {
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "image": f"data:image/jpeg;base64,{img_base64}"
+                                },
+                                {
+                                    "text": "Extract all text from this lab report image. Preserve the table structure and formatting. List all lab tests with their values, units, and reference ranges."
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+            
+            try:
+                # Use Qwen international endpoint directly
+                qwen_url = "https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation"
+                response = requests.post(
+                    qwen_url,
+                    headers=headers,
+                    json=payload,
+                    timeout=60
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    extracted = result["output"]["choices"][0]["message"]["content"]
+                    all_extracted_text.append(f"--- Page {page_num + 1} ---\n{extracted}")
+                    print(f"    ✅ Extracted {len(extracted)} characters")
+                else:
+                    print(f"    ❌ Qwen API error: {response.status_code}")
+                    print(f"       {response.text[:200]}")
+            except Exception as e:
+                print(f"    ❌ Error: {e}")
+        
+        # Display combined extracted text
+        combined_text = "\n\n".join(all_extracted_text)
+        print_header("QWEN-VL EXTRACTED TEXT")
+        if combined_text.strip():
+            preview = combined_text[:1500]
+            if len(combined_text) > 1500:
+                preview += f"\n\n... [{len(combined_text) - 1500} more characters]"
+            print(preview)
+            print(f"\n  Total characters extracted by Qwen: {len(combined_text)}")
+        else:
+            print("  ⚠️  No text extracted by Qwen-VL")
+            
     except Exception as e:
-        print(f"  ⚠️  Error extracting text: {e}")
+        print(f"  ⚠️  Error in Qwen extraction: {e}")
+        import traceback
+        print(traceback.format_exc())
     
     # Test PDF analysis
     print_header(f"PDF ANALYSIS (Language: {language})")
@@ -236,13 +321,16 @@ def test_pdf_file(pdf_path: str, language: str = "en"):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Manual test for PDF lab analysis",
+        description="Manual test for PDF lab analysis using Qwen-VL (PDF → JPG → AI)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   python test_manual_pdf.py ~/Documents/lab_results.pdf
   python test_manual_pdf.py ./test_lab_results.pdf --language fr
   python test_manual_pdf.py /path/to/report.pdf --language en
+
+Note: This script converts PDF to JPG and uses Qwen-VL for text extraction.
+Install dependencies: pip install Pillow pdf2image
         """
     )
     
