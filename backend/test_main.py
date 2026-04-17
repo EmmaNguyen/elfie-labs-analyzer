@@ -58,15 +58,13 @@ class TestNormalizeLabTest:
             assert result["unit"] == "g/dL"
     
     def test_normalize_hba1c_variants(self):
-        """Should normalize HbA1c variants"""
-        # Note: Due to substring matching order, "HbA1c" matches "Hb" first
-        # The actual behavior returns Hemoglobin for "HbA1c" due to mapping order
+        """Should normalize HbA1c variants to Glycated Hemoglobin"""
+        # With longest-match-first logic, "HbA1c" should match correctly
         result = normalize_lab_test("HbA1c")
-        # "Hb" is checked before "HbA1c" in mappings, so it returns Hemoglobin
-        assert result["standard_name"] == "Hemoglobin"
-        assert result["loinc"] == "718-7"
+        assert result["standard_name"] == "Glycated Hemoglobin"
+        assert result["loinc"] == "4548-4"
         
-        # Test A1C which doesn't contain "Hb"
+        # Test A1C variant
         result = normalize_lab_test("A1C")
         assert result["standard_name"] == "Glycated Hemoglobin"
         assert result["loinc"] == "4548-4"
@@ -307,6 +305,197 @@ class TestQwenAPIIntegration:
         assert len(result) == 1
         assert "severity_tier" in result[0]
         assert "patient_explanation" in result[0]
+
+
+class TestExtractTextFromPDFBytes:
+    """Tests for extract_text_from_pdf_bytes async function"""
+    
+    @pytest.mark.asyncio
+    async def test_extracts_text_from_pdf_bytes(self):
+        """Should extract text from PDF bytes"""
+        from main import extract_text_from_pdf_bytes
+        from reportlab.pdfgen import canvas
+        from reportlab.lib.pagesizes import letter
+        
+        buffer = BytesIO()
+        c = canvas.Canvas(buffer, pagesize=letter)
+        c.drawString(100, 700, "Laboratory Results")
+        c.drawString(100, 680, "Glucose: 95 mg/dL")
+        c.drawString(100, 660, "Hemoglobin: 13.2 g/dL")
+        c.save()
+        
+        buffer.seek(0)
+        pdf_bytes = buffer.read()
+        
+        result = await extract_text_from_pdf_bytes(pdf_bytes)
+        assert "Laboratory Results" in result
+        assert "Glucose" in result
+        assert "Hemoglobin" in result
+
+
+class TestTextToSpeechEndpoint:
+    """Tests for /text-to-speech endpoint"""
+    
+    @pytest.mark.asyncio
+    async def test_text_to_speech_requires_text(self):
+        """Should require text parameter"""
+        from httpx import ASGITransport
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.post(
+                "/text-to-speech",
+                data={"provider": "qwen", "voice_id": "Cherry", "language": "en"}
+            )
+            # FastAPI will return 422 for missing required field
+            assert response.status_code in [400, 422]
+    
+    @patch('main.requests.post')
+    @pytest.mark.asyncio
+    async def test_text_to_speech_qwen_success(self, mock_post):
+        """Should return audio content from Qwen TTS"""
+        # Mock Qwen TTS response
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "output": {
+                "audio": {
+                    "url": "https://example.com/audio.mp3"
+                }
+            }
+        }
+        mock_post.return_value = mock_response
+        
+        # Mock audio fetch response
+        mock_audio_response = Mock()
+        mock_audio_response.status_code = 200
+        mock_audio_response.content = b"fake audio data"
+        
+        with patch('main.requests.get', return_value=mock_audio_response):
+            from httpx import ASGITransport
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+                response = await client.post(
+                    "/text-to-speech",
+                    data={
+                        "text": "Your hemoglobin is normal",
+                        "provider": "qwen",
+                        "voice_id": "Cherry",
+                        "language": "en"
+                    }
+                )
+                
+                assert response.status_code == 200
+                assert response.headers["content-type"] == "audio/mpeg"
+                assert response.content == b"fake audio data"
+
+
+class TestLabTestMappings:
+    """Tests for lab test normalization mappings"""
+    
+    def test_hdl_cholesterol_mapping(self):
+        """HDL Cholesterol should not be mapped to Total Cholesterol"""
+        result = normalize_lab_test("HDL Cholesterol")
+        assert result["standard_name"] == "HDL Cholesterol"
+        assert result["loinc"] == "2085-9"
+    
+    def test_ldl_cholesterol_mapping(self):
+        """LDL Cholesterol should not be mapped to Total Cholesterol"""
+        result = normalize_lab_test("LDL Cholesterol")
+        assert result["standard_name"] == "LDL Cholesterol"
+        assert result["loinc"] == "13457-7"
+    
+    def test_hba1c_mapping(self):
+        """HbA1c should be mapped to Glycated Hemoglobin"""
+        result = normalize_lab_test("HbA1c")
+        assert result["standard_name"] == "Glycated Hemoglobin"
+        assert result["loinc"] == "4548-4"
+    
+    def test_glucose_mapping(self):
+        """Glucose should have correct LOINC"""
+        result = normalize_lab_test("Glucose")
+        assert result["standard_name"] == "Glucose"
+        assert result["loinc"] == "2345-7"
+    
+    def test_rbc_mapping(self):
+        """RBC should map to Red Blood Cell Count"""
+        result = normalize_lab_test("RBC")
+        assert result["standard_name"] == "Red Blood Cell Count"
+        assert result["loinc"] == "789-8"
+    
+    def test_wbc_mapping(self):
+        """WBC should map to White Blood Cell Count"""
+        result = normalize_lab_test("WBC")
+        assert result["standard_name"] == "White Blood Cell Count"
+        assert result["loinc"] == "6690-2"
+
+
+class TestPDFAnalysisIntegration:
+    """Integration tests for full PDF analysis flow"""
+    
+    @pytest.mark.asyncio
+    async def test_analyze_pdf_extracts_all_tests(self):
+        """Should extract all tests from a comprehensive PDF"""
+        from main import extract_text_from_pdf_bytes, call_qwen_vl
+        from reportlab.pdfgen import canvas
+        from reportlab.lib.pagesizes import letter
+        
+        # Create PDF with multiple tests
+        buffer = BytesIO()
+        c = canvas.Canvas(buffer, pagesize=letter)
+        c.setFont('Helvetica-Bold', 14)
+        c.drawString(100, 750, 'Comprehensive Lab Results')
+        c.setFont('Helvetica', 10)
+        
+        tests = [
+            ('Glucose', '95', 'mg/dL', '70-100', 'Normal'),
+            ('Hemoglobin', '13.2', 'g/dL', '12.0-15.5', 'Normal'),
+            ('HbA1c', '5.4', '%', '4.0-5.6', 'Normal'),
+            ('Total Cholesterol', '210', 'mg/dL', '<200', 'High'),
+            ('HDL Cholesterol', '55', 'mg/dL', '>40', 'Normal'),
+            ('LDL Cholesterol', '130', 'mg/dL', '<100', 'High'),
+        ]
+        
+        y = 700
+        for test in tests:
+            c.drawString(100, y, f"{test[0]}: {test[1]} {test[2]} (Ref: {test[3]}) - {test[4]}")
+            y -= 20
+        
+        c.save()
+        buffer.seek(0)
+        pdf_bytes = buffer.read()
+        
+        # Extract text
+        text = await extract_text_from_pdf_bytes(pdf_bytes)
+        assert "Glucose" in text
+        assert "Hemoglobin" in text
+        assert "HbA1c" in text
+        assert "HDL Cholesterol" in text
+        assert "LDL Cholesterol" in text
+
+
+class TestCalculateSeverityEdgeCases:
+    """Additional edge case tests for calculate_severity"""
+    
+    def test_exactly_at_range_boundary(self):
+        """Value exactly at boundary should be Normal"""
+        result = calculate_severity(12.0, "12.0-15.5")
+        assert result == "None"
+        
+        result = calculate_severity(15.5, "12.0-15.5")
+        assert result == "None"
+    
+    def test_very_high_deviation(self):
+        """Very high deviation should be Severe"""
+        result = calculate_severity(100, "12.0-15.5")
+        assert result == "Severe"
+    
+    def test_zero_value(self):
+        """Zero value should be handled"""
+        result = calculate_severity(0, "12.0-15.5")
+        assert result == "Severe"
+    
+    def test_negative_value(self):
+        """Negative value should be handled"""
+        result = calculate_severity(-5, "12.0-15.5")
+        assert result == "Severe"
 
 
 if __name__ == "__main__":
