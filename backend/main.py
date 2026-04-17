@@ -662,7 +662,12 @@ async def analyze_pdf(
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "qwen_api_key_configured": bool(QWEN_API_KEY) and QWEN_API_KEY != "your-qwen-api-key",
+        "qwen_api_key_length": len(QWEN_API_KEY) if QWEN_API_KEY and QWEN_API_KEY != "your-qwen-api-key" else 0
+    }
 
 @app.post("/text-to-speech")
 async def text_to_speech(
