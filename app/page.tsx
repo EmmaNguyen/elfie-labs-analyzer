@@ -182,6 +182,16 @@ export default function HomePage() {
     }
   }
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Normal': return 'bg-green-500 hover:bg-green-600'
+      case 'Low': return 'bg-blue-500 hover:bg-blue-600'
+      case 'High': return 'bg-orange-500 hover:bg-orange-600'
+      case 'Critical': return 'bg-red-500 hover:bg-red-600'
+      default: return 'bg-gray-500 hover:bg-gray-600'
+    }
+  }
+
   const languages = [
     { code: 'en', name: 'English' },
     { code: 'fr', name: 'Français' },
@@ -305,43 +315,63 @@ export default function HomePage() {
               </div>
               <div className="space-y-4">
                 {analysisResults.results.map((result: LabResult, index: number) => (
-                  <Card key={index} className="border-l-4 border-l-blue-500">
+                  <Card key={`${result.test_name}-${index}`} className="border-l-4 border-l-blue-500">
                     <CardContent className="p-6">
+                      {/* Header with number, name, and value */}
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                            {result.test_name}
-                          </h3>
-                          <div className="flex items-center gap-4 text-sm">
-                            <span className="font-medium">
-                              {result.value} {result.unit}
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-700 rounded-full text-sm font-bold">
+                              {index + 1}
                             </span>
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              {result.test_name}
+                            </h3>
+                          </div>
+                          
+                          {/* Value, Unit, Reference Range, and Status */}
+                          <div className="flex flex-wrap items-center gap-3 text-sm ml-11">
+                            <span className="text-2xl font-bold text-gray-900">
+                              {result.value}
+                            </span>
+                            <span className="text-lg text-gray-600 font-medium">
+                              {result.unit}
+                            </span>
+                            <span className="text-gray-400">|</span>
                             <span className="text-gray-500">
-                              Range: {result.reference_range}
+                              Ref: <span className="font-medium text-gray-700">{result.reference_range}</span>
                             </span>
-                            <Badge className={getSeverityColor(result.severity_tier)}>
-                              {result.severity_tier}
+                            <Badge className={`${getStatusColor(result.status)} text-white`}>
+                              {result.status}
                             </Badge>
+                            {result.severity_tier !== 'None' && (
+                              <Badge className={getSeverityColor(result.severity_tier)}>
+                                {result.severity_tier}
+                              </Badge>
+                            )}
                           </div>
                         </div>
+                        
+                        {/* Voice button */}
                         <div className="flex items-center gap-2">
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => {
-                              const text = `${result.test_name}: ${result.value} ${result.unit}. ${result.patient_explanation} ${result.next_steps}`
+                              const text = `${result.test_name}: ${result.value} ${result.unit}. ${result.patient_explanation}`
                               generateSpeech(text)
                             }}
                             disabled={isSpeaking}
                             className="text-blue-600 hover:text-blue-800"
+                            title="Listen to explanation"
                           >
                             <Volume2 className="h-4 w-4" />
                           </Button>
-                          <div className={`w-3 h-3 rounded-full ${getStatusIcon(result.status)}`} />
                         </div>
                       </div>
                       
-                      <div className="grid md:grid-cols-2 gap-4">
+                      {/* Explanation and Next Steps */}
+                      <div className="grid md:grid-cols-2 gap-4 ml-11">
                         <div className="bg-blue-50 p-4 rounded-lg">
                           <h4 className="font-medium text-blue-900 mb-2">
                             What this means
