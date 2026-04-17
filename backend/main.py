@@ -33,23 +33,51 @@ QWEN_VL_URL = "https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimod
 QWEN_MAX_URL = "https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation"
 
 # Lab test normalization mappings
+# Keys are sorted by length (longest first) to avoid partial matches
 LAB_TEST_MAPPINGS = {
-    "Hemoglobin": {"standard_name": "Hemoglobin", "loinc": "718-7", "unit": "g/dL"},
-    "Hb": {"standard_name": "Hemoglobin", "loinc": "718-7", "unit": "g/dL"},
-    "Hgb": {"standard_name": "Hemoglobin", "loinc": "718-7", "unit": "g/dL"},
+    # Cholesterol variants (must be before "Cholesterol")
+    "HDL Cholesterol": {"standard_name": "HDL Cholesterol", "loinc": "2085-9", "unit": "mg/dL"},
+    "LDL Cholesterol": {"standard_name": "LDL Cholesterol", "loinc": "13457-7", "unit": "mg/dL"},
+    "Total Cholesterol": {"standard_name": "Total Cholesterol", "loinc": "2093-3", "unit": "mg/dL"},
+    "Cholesterol": {"standard_name": "Total Cholesterol", "loinc": "2093-3", "unit": "mg/dL"},
+    # HbA1c variants (must be before "Hb")
+    "Glycated Hemoglobin": {"standard_name": "Glycated Hemoglobin", "loinc": "4548-4", "unit": "%"},
     "HbA1c": {"standard_name": "Glycated Hemoglobin", "loinc": "4548-4", "unit": "%"},
     "A1C": {"standard_name": "Glycated Hemoglobin", "loinc": "4548-4", "unit": "%"},
-    "Cholesterol": {"standard_name": "Total Cholesterol", "loinc": "2093-3", "unit": "mg/dL"},
-    "WBC": {"standard_name": "White Blood Cell Count", "loinc": "6690-2", "unit": "K/uL"},
+    # Blood cells
+    "White Blood Cell Count": {"standard_name": "White Blood Cell Count", "loinc": "6690-2", "unit": "K/uL"},
     "White Blood Cells": {"standard_name": "White Blood Cell Count", "loinc": "6690-2", "unit": "K/uL"},
+    "WBC": {"standard_name": "White Blood Cell Count", "loinc": "6690-2", "unit": "K/uL"},
+    "Red Blood Cell Count": {"standard_name": "Red Blood Cell Count", "loinc": "789-8", "unit": "M/uL"},
+    "Red Blood Cells": {"standard_name": "Red Blood Cell Count", "loinc": "789-8", "unit": "M/uL"},
+    "RBC": {"standard_name": "Red Blood Cell Count", "loinc": "789-8", "unit": "M/uL"},
+    "Platelets": {"standard_name": "Platelet Count", "loinc": "777-3", "unit": "K/uL"},
+    "Platelet Count": {"standard_name": "Platelet Count", "loinc": "777-3", "unit": "K/uL"},
+    # Hemoglobin (after HbA1c)
+    "Hemoglobin": {"standard_name": "Hemoglobin", "loinc": "718-7", "unit": "g/dL"},
+    "Hgb": {"standard_name": "Hemoglobin", "loinc": "718-7", "unit": "g/dL"},
+    "Hb": {"standard_name": "Hemoglobin", "loinc": "718-7", "unit": "g/dL"},
+    # Other common tests
+    "Glucose": {"standard_name": "Glucose", "loinc": "2345-7", "unit": "mg/dL"},
+    "Triglycerides": {"standard_name": "Triglycerides", "loinc": "2571-8", "unit": "mg/dL"},
+    "Creatinine": {"standard_name": "Creatinine", "loinc": "2160-0", "unit": "mg/dL"},
+    "BUN": {"standard_name": "Blood Urea Nitrogen", "loinc": "3094-0", "unit": "mg/dL"},
+    "Blood Urea Nitrogen": {"standard_name": "Blood Urea Nitrogen", "loinc": "3094-0", "unit": "mg/dL"},
+    "Sodium": {"standard_name": "Sodium", "loinc": "2951-2", "unit": "mEq/L"},
+    "Potassium": {"standard_name": "Potassium", "loinc": "2823-3", "unit": "mEq/L"},
+    "Calcium": {"standard_name": "Calcium", "loinc": "17861-6", "unit": "mg/dL"},
 }
 
 def normalize_lab_test(test_name: str) -> Dict[str, Any]:
     """Normalize lab test name to standard format"""
     test_name_lower = test_name.lower().strip()
     
-    for key, mapping in LAB_TEST_MAPPINGS.items():
-        if key.lower() in test_name_lower or test_name_lower in key.lower():
+    # Sort mappings by key length (longest first) to avoid partial matches
+    # e.g., "HbA1c" should match before "Hb"
+    sorted_mappings = sorted(LAB_TEST_MAPPINGS.items(), key=lambda x: len(x[0]), reverse=True)
+    
+    for key, mapping in sorted_mappings:
+        if key.lower() in test_name_lower:
             return mapping
     
     return {
@@ -111,59 +139,116 @@ def extract_text_from_pdf(pdf_file: UploadFile) -> str:
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error reading PDF: {str(e)}")
 
+async def extract_text_from_pdf_bytes(pdf_content: bytes) -> str:
+    """Extract text from PDF bytes using PyPDF2"""
+    try:
+        pdf_reader = PyPDF2.PdfReader(io.BytesIO(pdf_content))
+        text = ""
+        for page in pdf_reader.pages:
+            text += page.extract_text() + "\n"
+        return text
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error reading PDF: {str(e)}")
+
+
 async def call_qwen_vl(pdf_content: bytes, language: str) -> Dict[str, Any]:
-    """Call Qwen-VL for PDF parsing and table extraction"""
-    
-    # Convert PDF to base64 for API call
-    import base64
-    pdf_base64 = base64.b64encode(pdf_content).decode('utf-8')
-    
-    headers = {
-        "Authorization": f"Bearer {QWEN_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    
-    payload = {
-        "model": "qwen-vl-plus",
-        "input": {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "image": f"data:application/pdf;base64,{pdf_base64}"
-                        },
-                        {
-                            "text": f"""
-You are a clinical lab analyst AI. Extract ALL lab tests from this PDF document. 
-For each test, provide:
-- test_name (exact name from document)
-- value (numeric value only)
-- unit (unit of measurement)
-- reference_range (as shown in document)
-- status (Normal/Low/High/Critical based on reference range)
-
-Return results in JSON format as a list of objects. Language: {language}
-
-If reference range is missing, use "Not provided".
-Do not diagnose or prescribe medical advice.
-"""
-                        }
-                    ]
-                }
-            ]
-        },
-        "parameters": {
-            "result_format": "message"
-        }
-    }
+    """Extract lab data from PDF using text extraction + Qwen-Max for parsing"""
     
     try:
-        response = requests.post(QWEN_VL_URL, headers=headers, json=payload, timeout=60)
+        # First, extract text from PDF
+        pdf_text = await extract_text_from_pdf_bytes(pdf_content)
+        
+        if not pdf_text.strip():
+            raise ValueError("No text could be extracted from PDF")
+        
+        # Use Qwen-Max to parse the extracted text into structured lab data
+        headers = {
+            "Authorization": f"Bearer {QWEN_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "model": "qwen-turbo",
+            "input": {
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "You are a clinical lab data extraction AI. Extract ALL lab test results from the provided text."
+                    },
+                    {
+                        "role": "user",
+                        "content": f"""Extract ALL lab tests from this text and return as JSON array.
+
+Text from PDF:
+{pdf_text}
+
+For each test, extract:
+- test_name: exact test name from document
+- value: numeric result (extract number only)
+- unit: unit of measurement
+- reference_range: normal range as shown
+- status: Normal/Low/High/Critical based on comparison
+
+Return ONLY a JSON array like this:
+[
+  {{
+    "test_name": "Hemoglobin",
+    "value": 12.5,
+    "unit": "g/dL",
+    "reference_range": "12.0-15.5 g/dL",
+    "status": "Normal"
+  }}
+]
+
+IMPORTANT:
+- Extract ALL tests found in the text, do not limit to common ones
+- If a value is like ">60" or "<5", extract the number and include the operator in value
+- If reference range is missing, use "Not provided"
+- Status should be: "Normal" if within range, "Low" if below, "High" if above, "Critical" if dangerously abnormal"""
+                    }
+                ]
+            },
+            "parameters": {
+                "result_format": "message"
+            }
+        }
+        
+        response = requests.post(QWEN_MAX_URL, headers=headers, json=payload, timeout=60)
         response.raise_for_status()
-        return response.json()
+        result = response.json()
+        
+        # Parse the JSON response from Qwen
+        content = result["output"]["choices"][0]["message"]["content"]
+        
+        # Try to extract JSON from the response (it might be wrapped in markdown code blocks)
+        import re
+        json_match = re.search(r'\[\s*\{.*?\}\s*\]', content, re.DOTALL)
+        if json_match:
+            lab_data_json = json_match.group(0)
+            lab_data = json.loads(lab_data_json)
+        else:
+            # Try parsing the whole content as JSON
+            lab_data = json.loads(content)
+        
+        # Wrap in the expected format
+        return {
+            "output": {
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(lab_data)
+                        }
+                    }
+                ]
+            }
+        }
+        
     except requests.exceptions.RequestException as e:
+        print(f"Qwen API error: {e}")
         # Fallback to mock data for demo
+        return get_mock_lab_data(language)
+    except (json.JSONDecodeError, KeyError, ValueError) as e:
+        print(f"Parsing error: {e}")
         return get_mock_lab_data(language)
 
 def get_mock_lab_data(language: str) -> Dict[str, Any]:
