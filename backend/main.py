@@ -28,8 +28,9 @@ app.add_middleware(
 
 # Qwen API configuration
 QWEN_API_KEY = os.getenv("QWEN_API_KEY", "your-qwen-api-key")
-QWEN_VL_URL = "https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation"
-QWEN_MAX_URL = "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation"
+# Use international endpoint (Singapore) - API key only works with this endpoint
+QWEN_VL_URL = "https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation"
+QWEN_MAX_URL = "https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation"
 
 # Lab test normalization mappings
 LAB_TEST_MAPPINGS = {
