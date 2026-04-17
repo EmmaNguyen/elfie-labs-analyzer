@@ -14,7 +14,16 @@ sleep 2
 echo "🔧 Starting backend on port 8000..."
 cd /Users/emma/CascadeProjects/elfie-labs-analyzer/backend
 source .venv/bin/activate
-export QWEN_API_KEY="${QWEN_API_KEY}"
+
+# Load API key from .env.local
+if [ -f "../.env.local" ]; then
+    export $(grep -v '^#' ../.env.local | xargs)
+    echo "✅ Loaded environment from .env.local"
+else
+    echo "❌ .env.local not found!"
+    exit 1
+fi
+
 nohup python main.py > /tmp/backend.log 2>&1 &
 sleep 3
 
