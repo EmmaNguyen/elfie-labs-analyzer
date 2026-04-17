@@ -305,24 +305,35 @@ IMPORTANT:
         }
     }
     
-    response = requests.post(QWEN_MAX_URL, headers=headers, json=payload, timeout=30)
-    response.raise_for_status()
-    result = response.json()
-    
-    # Parse the JSON response from Qwen
-    content = result["output"]["choices"][0]["message"]["content"]
-    
-    # Try to extract JSON from the response (it might be wrapped in markdown code blocks)
-    import re
-    json_match = re.search(r'\[\s*\{.*?\}\s*\]', content, re.DOTALL)
-    if json_match:
-        lab_data_json = json_match.group(0)
-        lab_data = json.loads(lab_data_json)
-    else:
-        # Try parsing the whole content as JSON
-        lab_data = json.loads(content)
-    
-    return lab_data if isinstance(lab_data, list) else []
+    try:
+        response = requests.post(QWEN_MAX_URL, headers=headers, json=payload, timeout=30)
+        response.raise_for_status()
+        result = response.json()
+        
+        print(f"[parse_lab_data] Qwen response status: {response.status_code}")
+        
+        # Parse the JSON response from Qwen
+        content = result["output"]["choices"][0]["message"]["content"]
+        print(f"[parse_lab_data] Qwen response (first 300 chars): {content[:300]}")
+        
+        # Try to extract JSON from the response (it might be wrapped in markdown code blocks)
+        import re
+        json_match = re.search(r'\[\s*\{.*?\}\s*\]', content, re.DOTALL)
+        if json_match:
+            lab_data_json = json_match.group(0)
+            lab_data = json.loads(lab_data_json)
+        else:
+            # Try parsing the whole content as JSON
+            lab_data = json.loads(content)
+        
+        print(f"[parse_lab_data] Parsed {len(lab_data)} tests")
+        return lab_data if isinstance(lab_data, list) else []
+        
+    except Exception as e:
+        print(f"[parse_lab_data] Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
 
 
 async def call_qwen_vl(pdf_content: bytes, language: str, first_page_only: bool = False) -> Dict[str, Any]:
