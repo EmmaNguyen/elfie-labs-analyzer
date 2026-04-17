@@ -212,7 +212,7 @@ export default function HomePage() {
           </h1>
           <div className="w-24 h-1 bg-blue-500 mx-auto mb-6 rounded-full"></div>
           <p className="text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Upload your blood test results and we'll explain them in plain, simple language
+            Simple language with a voice
           </p>
         </header>
 
