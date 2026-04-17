@@ -533,8 +533,19 @@ def enhance_lab_data_with_fallback(lab_data: List[Dict], language: str) -> List[
     return enhanced_data
 
 @app.post("/analyze-pdf")
-async def analyze_pdf(pdf_file: UploadFile = File(...), language: str = Form("en")):
-    """Analyze lab PDF and return structured results"""
+async def analyze_pdf(
+    pdf_file: UploadFile = File(...), 
+    language: str = Form("en"),
+    first_page_only: bool = Form(True)
+):
+    """Analyze lab PDF and return structured results
+    
+    Args:
+        pdf_file: PDF file to analyze
+        language: Language code (en, vi, etc.)
+        first_page_only: If True, only process first page (faster). 
+                        Default is True for quick results. Set to False for full report.
+    """
     
     if not pdf_file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="File must be a PDF")
@@ -544,7 +555,7 @@ async def analyze_pdf(pdf_file: UploadFile = File(...), language: str = Form("en
         pdf_content = await pdf_file.read()
         
         # Extract lab data using Qwen-VL
-        qwen_vl_result = await call_qwen_vl(pdf_content, language)
+        qwen_vl_result = await call_qwen_vl(pdf_content, language, first_page_only=first_page_only)
         
         # Parse the extracted lab data
         try:
