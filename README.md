@@ -1,6 +1,6 @@
-# Elfie AI Labs Analyzer
+# Qwen Build Day - Elfie AI Labs Analyzer
 
-**Challenge #3 MVP - Qwen AI Build Day Healthcare Track**
+**Qwen AI Build Day Healthcare Track**
 
 Transform dense, multilingual lab PDFs into clear, standardized, and actionable patient insights using Qwen AI models.
 

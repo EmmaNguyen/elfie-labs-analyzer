@@ -1,5 +1,11 @@
 import '@testing-library/jest-dom'
 
+// Load environment variables from .env.local
+import { config } from 'dotenv'
+import { resolve } from 'path'
+
+config({ path: resolve(__dirname, '.env.local') })
+
 // Mock react-pdf
 jest.mock('react-pdf', () => ({
   Document: ({ children }) => <div data-testid="pdf-document">{children}</div>,

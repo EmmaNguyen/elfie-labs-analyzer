@@ -371,6 +371,36 @@ async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
+@app.post("/text-to-speech")
+async def text_to_speech(text: str = Form(...), voice_id: str = Form("CwhRBWXzGAHq8TQ4Fs17")):
+    """Convert text to speech using ElevenLabs API"""
+    try:
+        ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
+        if not ELEVENLABS_API_KEY or ELEVENLABS_API_KEY == "YOUR_API_KEY_HERE":
+            raise HTTPException(status_code=400, detail="ElevenLabs API key not configured")
+
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}?output_format=mp3_44100_128"
+        headers = {
+            "xi-api-key": ELEVENLABS_API_KEY,
+            "Content-Type": "application/json"
+        }
+        data = {
+            "text": text,
+            "model_id": "eleven_multilingual_v2"
+        }
+
+        response = requests.post(url, headers=headers, json=data, timeout=30)
+
+        if response.status_code == 200:
+            return Response(content=response.content, media_type="audio/mpeg")
+        else:
+            raise HTTPException(status_code=response.status_code, detail=f"ElevenLabs API error: {response.text}")
+
+    except requests.exceptions.Timeout:
+        raise HTTPException(status_code=504, detail="Text-to-speech request timed out")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Text-to-speech failed: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     import os
