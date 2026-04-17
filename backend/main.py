@@ -204,7 +204,7 @@ async def extract_text_with_qwen_vl(pdf_content: bytes, language: str, max_pages
             img_base64 = base64.b64encode(img_bytes).decode('utf-8')
             
             payload = {
-                "model": "qwen-vl-plus",
+                "model": "qwen-vl-max",
                 "input": {
                     "messages": [
                         {
@@ -441,7 +441,7 @@ async def call_qwen_max(lab_data: List[Dict], language: str) -> List[Dict]:
     lab_data_json = json.dumps(lab_data, indent=2)
     
     payload = {
-        "model": "qwen-max",
+        "model": "qwen-turbo",
         "input": {
             "messages": [
                 {
