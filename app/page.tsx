@@ -201,27 +201,30 @@ export default function HomePage() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <header className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+      {/* Header - Larger text for better visibility */}
+      <header className="text-center mb-12">
+        <h1 className="text-5xl font-bold text-gray-900 mb-4">
           Elfie AI Labs Analyzer
         </h1>
-        <p className="text-xl text-gray-600">
+        <p className="text-2xl text-gray-700">
           Transform complex lab results into clear, patient-friendly insights
         </p>
       </header>
 
-      <div className="flex justify-center mb-6">
+      {/* Language Selector - Larger buttons */}
+      <div className="flex justify-center mb-8">
         <Card className="w-fit">
-          <CardContent className="p-4">
+          <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <Languages className="h-5 w-5 text-gray-500" />
-              <div className="flex gap-2">
+              <Languages className="h-6 w-6 text-gray-600" />
+              <div className="flex gap-3">
                 {languages.map((lang) => (
                   <Button
                     key={lang.code}
                     variant={currentLanguage === lang.code ? "default" : "outline"}
-                    size="sm"
+                    size="lg"
                     onClick={() => setCurrentLanguage(lang.code)}
+                    className="text-lg px-6 py-5"
                   >
                     {lang.name}
                   </Button>
@@ -235,15 +238,17 @@ export default function HomePage() {
       {!analysisResults ? (
         <PDFUpload onFileUpload={handleFileUpload} isProcessing={isProcessing} />
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-8">
+          {/* Results Header - Larger text and buttons */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Analysis Results</CardTitle>
-                <div className="flex gap-2">
+                <CardTitle className="text-3xl">Analysis Results</CardTitle>
+                <div className="flex gap-3">
                   <Button 
                     variant="outline" 
-                    size="sm" 
+                    size="lg" 
+                    className="text-lg px-6 py-5"
                     onClick={() => {
                       if (isSpeaking) {
                         stopSpeaking()
@@ -258,133 +263,134 @@ export default function HomePage() {
                   >
                     {isSpeaking ? (
                       <>
-                        <VolumeX className="h-4 w-4 mr-2" />
-                        Stop
+                        <VolumeX className="h-6 w-6 mr-2" />
+                        <span className="text-lg">Stop</span>
                       </>
                     ) : (
                       <>
-                        <Volume2 className="h-4 w-4 mr-2" />
-                        Listen
+                        <Volume2 className="h-6 w-6 mr-2" />
+                        <span className="text-lg">Listen</span>
                       </>
                     )}
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setShowExportModal(true)}>
-                    <Download className="h-4 w-4 mr-2" />
+                  <Button variant="outline" size="lg" className="text-lg px-6 py-5" onClick={() => setShowExportModal(true)}>
+                    <Download className="h-6 w-6 mr-2" />
                     Export
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setShowExportModal(true)}>
-                    <Share2 className="h-4 w-4 mr-2" />
+                  <Button variant="outline" size="lg" className="text-lg px-6 py-5" onClick={() => setShowExportModal(true)}>
+                    <Share2 className="h-6 w-6 mr-2" />
                     Share
                   </Button>
                 </div>
               </div>
-              <CardDescription>
+              <CardDescription className="text-xl mt-2">
                 AI-powered analysis of your laboratory results
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-4 gap-4 mb-6">
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold text-gray-900">
+              {/* Summary Statistics - Larger and clearer */}
+              <div className="grid grid-cols-4 gap-6 mb-8">
+                <div className="text-center p-6 bg-gray-100 rounded-xl border-2 border-gray-300">
+                  <div className="text-4xl font-bold text-gray-900 mb-2">
                     {analysisResults.summary.total_tests}
                   </div>
-                  <div className="text-sm text-gray-600">Total Tests</div>
+                  <div className="text-xl font-semibold text-gray-700">Total Tests</div>
                 </div>
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">
+                <div className="text-center p-6 bg-green-100 rounded-xl border-2 border-green-400">
+                  <div className="text-4xl font-bold text-green-700 mb-2">
                     {analysisResults.summary.normal}
                   </div>
-                  <div className="text-sm text-gray-600">Normal</div>
+                  <div className="text-xl font-semibold text-green-800">Normal</div>
                 </div>
-                <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                  <div className="text-2xl font-bold text-yellow-600">
+                <div className="text-center p-6 bg-yellow-100 rounded-xl border-2 border-yellow-400">
+                  <div className="text-4xl font-bold text-yellow-700 mb-2">
                     {analysisResults.summary.abnormal}
                   </div>
-                  <div className="text-sm text-gray-600">Abnormal</div>
+                  <div className="text-xl font-semibold text-yellow-800">Abnormal</div>
                 </div>
-                <div className="text-center p-4 bg-red-50 rounded-lg">
-                  <div className="text-2xl font-bold text-red-600">
+                <div className="text-center p-6 bg-red-100 rounded-xl border-2 border-red-400">
+                  <div className="text-4xl font-bold text-red-700 mb-2">
                     {analysisResults.summary.critical}
                   </div>
-                  <div className="text-sm text-gray-600">Critical</div>
+                  <div className="text-xl font-semibold text-red-800">Critical</div>
                 </div>
               </div>
 
-              <div className="text-sm text-gray-500 mb-2">
-                Rendering {analysisResults.results.length} test results
+              <div className="text-lg text-gray-600 mb-4 font-medium">
+                Showing {analysisResults.results.length} test results
               </div>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {analysisResults.results.map((result: LabResult, index: number) => (
-                  <Card key={`${result.test_name}-${index}`} className="border-l-4 border-l-blue-500">
-                    <CardContent className="p-6">
-                      {/* Header with number, name, and value */}
-                      <div className="flex items-start justify-between mb-4">
+                  <Card key={`${result.test_name}-${index}`} className="border-l-8 border-l-blue-600 shadow-lg">
+                    <CardContent className="p-8">
+                      {/* Header with number, name, and value - Larger for seniors */}
+                      <div className="flex items-start justify-between mb-6">
                         <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-700 rounded-full text-sm font-bold">
+                          <div className="flex items-center gap-4 mb-3">
+                            <span className="flex items-center justify-center w-12 h-12 bg-blue-100 text-blue-800 rounded-full text-xl font-bold">
                               {index + 1}
                             </span>
-                            <h3 className="text-lg font-semibold text-gray-900">
+                            <h3 className="text-2xl font-bold text-gray-900">
                               {result.test_name}
                             </h3>
                           </div>
                           
-                          {/* Value, Unit, Reference Range, and Status */}
-                          <div className="flex flex-wrap items-center gap-3 text-sm ml-11">
-                            <span className="text-2xl font-bold text-gray-900">
+                          {/* Value, Unit, Reference Range, and Status - Larger text */}
+                          <div className="flex flex-wrap items-center gap-4 ml-16">
+                            <span className="text-4xl font-bold text-gray-900">
                               {result.value}
                             </span>
-                            <span className="text-lg text-gray-600 font-medium">
+                            <span className="text-2xl text-gray-700 font-semibold">
                               {result.unit}
                             </span>
-                            <span className="text-gray-400">|</span>
-                            <span className="text-gray-500">
-                              Ref: <span className="font-medium text-gray-700">{result.reference_range}</span>
+                            <span className="text-2xl text-gray-500">|</span>
+                            <span className="text-xl text-gray-600">
+                              Ref: <span className="font-bold text-gray-800">{result.reference_range}</span>
                             </span>
-                            <Badge className={`${getStatusColor(result.status)} text-white`}>
+                            <Badge className={`${getStatusColor(result.status)} text-white text-lg px-4 py-2`}>
                               {result.status}
                             </Badge>
                             {result.severity_tier !== 'None' && (
-                              <Badge className={getSeverityColor(result.severity_tier)}>
+                              <Badge className={`${getSeverityColor(result.severity_tier)} text-lg px-4 py-2`}>
                                 {result.severity_tier}
                               </Badge>
                             )}
                           </div>
                         </div>
                         
-                        {/* Voice button */}
+                        {/* Voice button - Larger for seniors */}
                         <div className="flex items-center gap-2">
                           <Button
-                            variant="ghost"
-                            size="sm"
+                            variant="outline"
+                            size="lg"
                             onClick={() => {
                               const text = `${result.test_name}: ${result.value} ${result.unit}. ${result.patient_explanation}`
                               generateSpeech(text)
                             }}
                             disabled={isSpeaking}
-                            className="text-blue-600 hover:text-blue-800"
-                            title="Listen to explanation"
+                            className="text-blue-700 hover:bg-blue-50 border-2 border-blue-600"
                           >
-                            <Volume2 className="h-4 w-4" />
+                            <Volume2 className="h-6 w-6 mr-2" />
+                            <span className="text-lg">Listen</span>
                           </Button>
                         </div>
                       </div>
                       
-                      {/* Explanation and Next Steps */}
-                      <div className="grid md:grid-cols-2 gap-4 ml-11">
-                        <div className="bg-blue-50 p-4 rounded-lg">
-                          <h4 className="font-medium text-blue-900 mb-2">
+                      {/* Explanation and Next Steps - Larger text */}
+                      <div className="grid md:grid-cols-2 gap-6 ml-16">
+                        <div className="bg-blue-50 p-6 rounded-xl border-2 border-blue-200">
+                          <h4 className="font-bold text-blue-900 mb-3 text-xl">
                             What this means
                           </h4>
-                          <p className="text-sm text-blue-800">
+                          <p className="text-lg text-blue-800 leading-relaxed">
                             {result.patient_explanation}
                           </p>
                         </div>
-                        <div className="bg-green-50 p-4 rounded-lg">
-                          <h4 className="font-medium text-green-900 mb-2">
+                        <div className="bg-green-50 p-6 rounded-xl border-2 border-green-200">
+                          <h4 className="font-bold text-green-900 mb-3 text-xl">
                             Next steps
                           </h4>
-                          <p className="text-sm text-green-800">
+                          <p className="text-lg text-green-800 leading-relaxed">
                             {result.next_steps}
                           </p>
                         </div>
