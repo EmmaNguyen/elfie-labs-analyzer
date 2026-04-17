@@ -626,7 +626,9 @@ async def analyze_pdf(
             "results": normalized_results,
             "debug": {
                 "pdf_size": len(pdf_content),
+                "pdf2image_available": PDF2IMAGE_AVAILABLE,
                 "qwen_vl_response_keys": list(qwen_vl_result.keys()) if isinstance(qwen_vl_result, dict) else "not_dict",
+                "lab_data_type": type(lab_data).__name__,
                 "lab_data_keys": list(lab_data.keys()) if isinstance(lab_data, dict) else "not_dict",
                 "lab_data_tests_count": len(lab_data.get('tests', [])) if isinstance(lab_data, dict) else 0,
                 "enhanced_results_count": len(enhanced_results),
