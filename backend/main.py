@@ -568,19 +568,34 @@ async def analyze_pdf(
         # Read PDF content
         pdf_content = await pdf_file.read()
         
+        print(f"[DEBUG] Processing PDF: {pdf_file.filename}, size: {len(pdf_content)} bytes")
+        
         # Extract lab data using Qwen-VL
         qwen_vl_result = await call_qwen_vl(pdf_content, language, first_page_only=first_page_only)
+        
+        print(f"[DEBUG] Qwen-VL response keys: {qwen_vl_result.keys() if isinstance(qwen_vl_result, dict) else 'not a dict'}")
         
         # Parse the extracted lab data
         try:
             content = qwen_vl_result["output"]["choices"][0]["message"]["content"]
+            print(f"[DEBUG] Qwen-VL content (first 200 chars): {content[:200]}")
             lab_data = json.loads(content)
-        except (KeyError, json.JSONDecodeError):
+            print(f"[DEBUG] Parsed lab_data keys: {lab_data.keys() if isinstance(lab_data, dict) else 'not a dict'}")
+            if isinstance(lab_data, dict) and 'tests' in lab_data:
+                print(f"[DEBUG] Number of tests extracted: {len(lab_data['tests'])}")
+        except (KeyError, json.JSONDecodeError) as e:
+            print(f"[DEBUG] Failed to parse Qwen-VL response: {e}")
             # Use fallback data
-            lab_data = json.loads(get_mock_lab_data(language)["output"]["choices"][0]["message"]["content"])
+            print(f"[DEBUG] Using mock data fallback")
+            mock_data = get_mock_lab_data(language)
+            lab_data = json.loads(mock_data["output"]["choices"][0]["message"]["content"])
         
         # Enhance with patient-friendly explanations using Qwen-Max
         enhanced_results = await call_qwen_max(lab_data, language)
+        
+        print(f"[DEBUG] Enhanced results count: {len(enhanced_results)}")
+        if enhanced_results:
+            print(f"[DEBUG] First enhanced result: {enhanced_results[0] if len(enhanced_results) > 0 else 'none'}")
         
         # Normalize test names and units
         normalized_results = []
@@ -592,6 +607,8 @@ async def analyze_pdf(
                 "loinc_code": normalized_test["loinc"]
             }
             normalized_results.append(normalized_result)
+        
+        print(f"[DEBUG] Normalized results count: {len(normalized_results)}")
         
         # Calculate summary statistics
         summary = {
