@@ -202,17 +202,17 @@ export default function HomePage() {
   return (
     <div className="min-h-screen warm-gradient">
       <div className="container mx-auto py-12 px-4">
-        {/* Header - Warmer, more inviting */}
+        {/* Header - Simple, friendly language */}
         <header className="text-center mb-16">
           <div className="inline-block mb-6">
             <span className="text-7xl">🏥</span>
           </div>
           <h1 className="text-6xl font-bold text-gray-800 mb-4 tracking-tight">
-            Elfie AI Labs Analyzer
+            Understand Your Lab Results
           </h1>
           <div className="w-24 h-1 bg-blue-500 mx-auto mb-6 rounded-full"></div>
           <p className="text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Transform complex lab results into clear, patient-friendly insights
+            Upload your blood test results and we'll explain them in plain, simple language
           </p>
         </header>
 
@@ -248,11 +248,11 @@ export default function HomePage() {
         <PDFUpload onFileUpload={handleFileUpload} isProcessing={isProcessing} />
       ) : (
         <div className="space-y-10">
-          {/* Results Header - Enhanced styling */}
+          {/* Results Header - Simple language */}
           <Card className="senior-card">
             <CardHeader className="pb-6">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-4xl text-gray-800">Analysis Results</CardTitle>
+                <CardTitle className="text-4xl text-gray-800">Your Results</CardTitle>
                 <div className="flex gap-3">
                   <Button 
                     variant="outline" 
@@ -293,40 +293,40 @@ export default function HomePage() {
                 </div>
               </div>
               <CardDescription className="text-xl mt-2">
-                AI-powered analysis of your laboratory results
+                Here's what your blood tests show, explained in simple terms
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Summary Statistics - Beautiful cards with icons */}
+              {/* Summary Statistics - Simple labels */}
               <div className="grid grid-cols-4 gap-8 mb-10">
                 <div className="text-center p-8 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border-2 border-gray-200 shadow-md">
                   <div className="text-5xl font-bold text-gray-800 mb-3">
                     {analysisResults.summary.total_tests}
                   </div>
-                  <div className="text-xl font-semibold text-gray-700">Total Tests</div>
+                  <div className="text-xl font-semibold text-gray-700">Tests Done</div>
                 </div>
                 <div className="text-center p-8 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl border-2 border-green-300 shadow-md">
                   <div className="text-5xl font-bold text-green-700 mb-3">
                     {analysisResults.summary.normal}
                   </div>
-                  <div className="text-xl font-semibold text-green-800">✓ Normal</div>
+                  <div className="text-xl font-semibold text-green-800">✓ Looking Good</div>
                 </div>
                 <div className="text-center p-8 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl border-2 border-yellow-300 shadow-md">
                   <div className="text-5xl font-bold text-yellow-700 mb-3">
                     {analysisResults.summary.abnormal}
                   </div>
-                  <div className="text-xl font-semibold text-yellow-800">⚠ Abnormal</div>
+                  <div className="text-xl font-semibold text-yellow-800">⚠ Needs Attention</div>
                 </div>
                 <div className="text-center p-8 bg-gradient-to-br from-red-50 to-red-100 rounded-2xl border-2 border-red-300 shadow-md">
                   <div className="text-5xl font-bold text-red-700 mb-3">
                     {analysisResults.summary.critical}
                   </div>
-                  <div className="text-xl font-semibold text-red-800">🔴 Critical</div>
+                  <div className="text-xl font-semibold text-red-800">🔴 See Doctor Soon</div>
                 </div>
               </div>
 
               <div className="text-lg text-gray-600 mb-4 font-medium">
-                Showing {analysisResults.results.length} test results
+                Showing {analysisResults.results.length} test results below
               </div>
               <div className="space-y-8">
                 {analysisResults.results.map((result: LabResult, index: number) => (
@@ -385,12 +385,12 @@ export default function HomePage() {
                         </div>
                       </div>
                       
-                      {/* Explanation and Next Steps - Beautiful colored boxes */}
+                      {/* Explanation and Next Steps - Simple, friendly language */}
                       <div className="grid md:grid-cols-2 gap-8 ml-16 mt-8">
                         <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-2xl border-2 border-blue-200 shadow-sm">
                           <h4 className="font-bold text-blue-900 mb-4 text-xl flex items-center gap-3">
                             <span className="text-2xl">💡</span>
-                            What this means
+                            What This Means for You
                           </h4>
                           <p className="text-lg text-blue-800 leading-relaxed">
                             {result.patient_explanation}
@@ -399,7 +399,7 @@ export default function HomePage() {
                         <div className="bg-gradient-to-br from-green-50 to-green-100 p-8 rounded-2xl border-2 border-green-200 shadow-sm">
                           <h4 className="font-bold text-green-900 mb-4 text-xl flex items-center gap-3">
                             <span className="text-2xl">👉</span>
-                            Next steps
+                            What You Should Do
                           </h4>
                           <p className="text-lg text-green-800 leading-relaxed">
                             {result.next_steps}
@@ -419,7 +419,7 @@ export default function HomePage() {
                   className="text-lg px-8 py-6 shadow-md hover:shadow-lg transition-shadow"
                 >
                   <span className="text-xl mr-2">📄</span>
-                  Analyze Another PDF
+                  Check Different Results
                 </Button>
               </div>
             </CardContent>
@@ -427,11 +427,15 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Footer - Softer, more prominent */}
+      {/* Footer - Reassuring message */}
       <footer className="mt-20 text-center">
         <div className="w-16 h-0.5 bg-gray-300 mx-auto mb-6 rounded-full"></div>
-        <p className="text-base text-gray-600 max-w-3xl mx-auto leading-relaxed">
-          © 2024 Elfie AI Labs Analyzer. This tool provides educational insights only and is not a substitute for professional medical advice.
+        <p className="text-base text-gray-600 max-w-3xl mx-auto leading-relaxed mb-4">
+          <strong>Important:</strong> This is general information to help you understand your results. 
+          It is not medical advice. Always talk to your doctor about what your results mean for your health.
+        </p>
+        <p className="text-sm text-gray-500">
+          © 2024 Elfie - Making lab results easier to understand
         </p>
       </footer>
 

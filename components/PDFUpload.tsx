@@ -76,13 +76,12 @@ export default function PDFUpload({ onFileUpload, isProcessing }: PDFUploadProps
     <div className="w-full max-w-4xl mx-auto space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5" />
-            Upload Lab PDF
+          <CardTitle className="flex items-center gap-2 text-2xl">
+            <Upload className="h-6 w-6" />
+            Upload Your Blood Test Results
           </CardTitle>
-          <CardDescription>
-            Upload your laboratory results PDF for AI-powered analysis. 
-            Supports English, French, Arabic, and Vietnamese documents.
+          <CardDescription className="text-lg">
+            Upload the PDF file from your doctor or lab. We'll explain what everything means in simple terms.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -96,20 +95,20 @@ export default function PDFUpload({ onFileUpload, isProcessing }: PDFUploadProps
           >
             <input {...getInputProps()} />
             <div className="space-y-4">
-              <FileText className="h-12 w-12 mx-auto text-gray-400" />
+              <FileText className="h-16 w-16 mx-auto text-gray-400" />
               {isDragActive ? (
-                <p className="text-blue-600">Drop the PDF here...</p>
+                <p className="text-blue-600 text-lg">Drop your PDF here...</p>
               ) : (
                 <div>
-                  <p className="text-gray-600 mb-2">
-                    Drag & drop your lab PDF here, or click to browse
+                  <p className="text-gray-600 mb-2 text-lg">
+                    Drag & drop your PDF here, or click to choose file
                   </p>
                   <div className="flex flex-wrap gap-2 justify-center">
-                    <Badge variant="secondary">PDF</Badge>
-                    <Badge variant="secondary">English</Badge>
-                    <Badge variant="secondary">Français</Badge>
-                    <Badge variant="secondary">Arabic</Badge>
-                    <Badge variant="secondary">Tiêng Viêt</Badge>
+                    <Badge variant="secondary" className="text-base px-4 py-2">PDF files</Badge>
+                    <Badge variant="secondary" className="text-base px-4 py-2">English</Badge>
+                    <Badge variant="secondary" className="text-base px-4 py-2">Français</Badge>
+                    <Badge variant="secondary" className="text-base px-4 py-2">Arabic</Badge>
+                    <Badge variant="secondary" className="text-base px-4 py-2">Tiếng Việt</Badge>
                   </div>
                 </div>
               )}
@@ -129,26 +128,27 @@ export default function PDFUpload({ onFileUpload, isProcessing }: PDFUploadProps
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <span>PDF Preview</span>
+              <span className="text-2xl">Your File</span>
               <Button 
                 onClick={handleAnalyze}
                 disabled={isProcessing}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 text-lg px-6 py-5"
+                size="lg"
               >
                 {isProcessing ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Analyzing...
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Reading Your Results...
                   </>
                 ) : (
                   <>
-                    <FileText className="h-4 w-4" />
-                    Analyze Results
+                    <FileText className="h-5 w-5" />
+                    Explain My Results
                   </>
                 )}
               </Button>
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-base">
               {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
             </CardDescription>
           </CardHeader>
@@ -171,15 +171,15 @@ export default function PDFUpload({ onFileUpload, isProcessing }: PDFUploadProps
         </Card>
       )}
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
         <div className="flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5" />
-          <div className="text-sm text-blue-800">
-            <p className="font-semibold mb-1">Privacy & Safety Notice</p>
-            <p>
-              This AI tool provides educational insights about lab results and is not a substitute 
-              for professional medical advice. Do not make medical decisions based solely on this output. 
-              Your PDFs are processed temporarily and deleted after analysis.
+          <AlertCircle className="h-6 w-6 text-blue-600 mt-0.5" />
+          <div className="text-base text-blue-800">
+            <p className="font-bold mb-2 text-lg">🔒 Your Privacy Matters</p>
+            <p className="leading-relaxed">
+              This tool helps you understand your lab results in simple language. 
+              It does not replace your doctor's advice. Always talk to your doctor about your health. 
+              Your files are deleted right after we read them - we don't keep them.
             </p>
           </div>
         </div>
