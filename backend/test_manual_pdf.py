@@ -22,6 +22,8 @@ if env_path.exists():
 
 # Import after setting env vars
 import requests
+import PyPDF2
+from io import BytesIO
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
@@ -78,6 +80,31 @@ def test_pdf_file(pdf_path: str, language: str = "en"):
     except Exception as e:
         print_test_result("Backend is healthy", False, str(e))
         sys.exit(1)
+    
+    # Extract and display raw text from PDF
+    print_header("EXTRACTED TEXT FROM PDF")
+    try:
+        with open(pdf_file, 'rb') as f:
+            pdf_reader = PyPDF2.PdfReader(f)
+            extracted_text = ""
+            for page_num, page in enumerate(pdf_reader.pages, 1):
+                page_text = page.extract_text()
+                if page_text:
+                    extracted_text += f"\n--- Page {page_num} ---\n{page_text}\n"
+            
+            if extracted_text.strip():
+                # Show first 1000 characters
+                preview = extracted_text[:1000]
+                if len(extracted_text) > 1000:
+                    preview += f"\n\n... [{len(extracted_text) - 1000} more characters]"
+                print(preview)
+                print(f"\n  Total characters extracted: {len(extracted_text)}")
+                print(f"  Total pages: {len(pdf_reader.pages)}")
+            else:
+                print("  ⚠️  No text could be extracted from PDF")
+                print("  The PDF may be scanned images or have no extractable text.")
+    except Exception as e:
+        print(f"  ⚠️  Error extracting text: {e}")
     
     # Test PDF analysis
     print_header(f"PDF ANALYSIS (Language: {language})")
