@@ -5,7 +5,7 @@ import PDFUpload from '@/components/PDFUpload'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Languages, Download, Share2, Settings, AlertCircle } from 'lucide-react'
+import { Languages, Download, Share2, Settings, AlertCircle, Volume2, VolumeX } from 'lucide-react'
 import { analyzePDF, LabResult, AnalysisResponse } from '@/lib/api'
 import ExportModal from '@/components/ExportModal'
 
@@ -14,6 +14,50 @@ export default function HomePage() {
   const [analysisResults, setAnalysisResults] = useState<AnalysisResponse | null>(null)
   const [currentLanguage, setCurrentLanguage] = useState('en')
   const [showExportModal, setShowExportModal] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
+
+  const generateSpeech = async (text: string) => {
+    try {
+      setIsSpeaking(true)
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      
+      const formData = new FormData()
+      formData.append('text', text)
+      formData.append('provider', 'qwen')
+      formData.append('voice_id', 'Cherry')
+      formData.append('language', currentLanguage)
+      
+      const response = await fetch(`${API_BASE_URL}/text-to-speech`, {
+        method: 'POST',
+        body: formData,
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate speech')
+      }
+      
+      const audioBlob = await response.blob()
+      const url = URL.createObjectURL(audioBlob)
+      setAudioUrl(url)
+      
+      const audio = new Audio(url)
+      audio.play()
+      audio.onended = () => setIsSpeaking(false)
+    } catch (error) {
+      console.error('Error generating speech:', error)
+      alert('Failed to generate speech. Please try again.')
+      setIsSpeaking(false)
+    }
+  }
+
+  const stopSpeaking = () => {
+    setIsSpeaking(false)
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl)
+      setAudioUrl(null)
+    }
+  }
 
   const handleFileUpload = async (file: File) => {
     setIsProcessing(true)
@@ -142,6 +186,33 @@ export default function HomePage() {
               <div className="flex items-center justify-between">
                 <CardTitle>Analysis Results</CardTitle>
                 <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                      if (isSpeaking) {
+                        stopSpeaking()
+                      } else {
+                        const summaryText = analysisResults.results.map(r => 
+                          `${r.test_name}: ${r.value} ${r.unit}. ${r.patient_explanation}`
+                        ).join('. ')
+                        generateSpeech(summaryText)
+                      }
+                    }}
+                    disabled={isSpeaking && !audioUrl}
+                  >
+                    {isSpeaking ? (
+                      <>
+                        <VolumeX className="h-4 w-4 mr-2" />
+                        Stop
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 className="h-4 w-4 mr-2" />
+                        Listen
+                      </>
+                    )}
+                  </Button>
                   <Button variant="outline" size="sm" onClick={() => setShowExportModal(true)}>
                     <Download className="h-4 w-4 mr-2" />
                     Export
