@@ -58,8 +58,48 @@ def print_test_result(test_name: str, passed: bool, details: str = ""):
         print(f"       {details}")
 
 
+def check_dependencies():
+    """Check if required dependencies are installed"""
+    print_header("DEPENDENCY CHECK")
+    
+    # Check Pillow
+    try:
+        from PIL import Image
+        print("  ✅ Pillow (PIL) installed")
+    except ImportError:
+        print("  ❌ Pillow not installed")
+        print("     Install: pip install Pillow")
+    
+    # Check pdf2image
+    try:
+        import pdf2image
+        print("  ✅ pdf2image installed")
+    except ImportError:
+        print("  ⚠️  pdf2image not installed (optional but recommended)")
+        print("     Install: pip install pdf2image")
+    
+    # Check poppler (system dependency)
+    try:
+        from pdf2image import convert_from_path
+        # Try a dummy conversion to check if poppler works
+        print("  ✅ poppler-utils (system) installed")
+    except ImportError:
+        pass  # Already reported above
+    except Exception as e:
+        if "poppler" in str(e).lower() or "pdftoppm" in str(e).lower():
+            print("  ❌ poppler-utils (system) not installed")
+            print("     macOS: brew install poppler")
+            print("     Ubuntu/Debian: sudo apt-get install poppler-utils")
+            print("     Windows: https://github.com/oschwartz10612/poppler-windows")
+        else:
+            print(f"  ⚠️  Could not verify poppler: {e}")
+
+
 def test_pdf_file(pdf_path: str, language: str = "en"):
     """Test PDF analysis with the given file"""
+    
+    # Check dependencies first
+    check_dependencies()
     
     pdf_file = Path(pdf_path)
     
@@ -109,6 +149,7 @@ def test_pdf_file(pdf_path: str, language: str = "en"):
             print(f"\n  Processing page {page_num + 1}/{num_pages}...")
             
             # Convert PDF page to image using pdf2image if available
+            img_bytes = None
             try:
                 from pdf2image import convert_from_path
                 images = convert_from_path(pdf_file, first_page=page_num + 1, last_page=page_num + 1)
@@ -118,12 +159,22 @@ def test_pdf_file(pdf_path: str, language: str = "en"):
                     img_buffer = BytesIO()
                     img.save(img_buffer, format='JPEG')
                     img_bytes = img_buffer.getvalue()
+                    print("    ✅ PDF converted to JPG")
                 else:
                     raise Exception("No image generated")
             except ImportError:
-                print("    ⚠️  pdf2image not available, using direct PDF bytes")
-                print("    Install with: pip install pdf2image poppler-utils")
-                # Fallback: use PDF bytes directly
+                print("    ⚠️  pdf2image not installed")
+                print("       Install: pip install pdf2image")
+                print("       Also install system dependency:")
+                print("         - macOS: brew install poppler")
+                print("         - Ubuntu/Debian: sudo apt-get install poppler-utils")
+                print("         - Windows: download from https://github.com/oschwartz10612/poppler-windows")
+            except Exception as e:
+                print(f"    ⚠️  Failed to convert PDF to image: {e}")
+            
+            # Fallback: use PDF bytes directly if image conversion failed
+            if img_bytes is None:
+                print("    ⚠️  Using direct PDF bytes (may not work with Qwen-VL)")
                 img_bytes = pdf_content
             
             # Use Qwen-VL to extract text from image
