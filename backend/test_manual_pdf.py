@@ -217,8 +217,19 @@ def test_pdf_file(pdf_path: str, language: str = "en"):
                 if response.status_code == 200:
                     result = response.json()
                     extracted = result["output"]["choices"][0]["message"]["content"]
-                    all_extracted_text.append(f"--- Page {page_num + 1} ---\n{extracted}")
-                    print(f"    ✅ Extracted {len(extracted)} characters")
+                    
+                    # Handle different response formats (string or list)
+                    if isinstance(extracted, list):
+                        # If it's a list of dicts with 'text' key, extract the text
+                        if len(extracted) > 0 and isinstance(extracted[0], dict) and 'text' in extracted[0]:
+                            extracted_text_content = extracted[0]['text']
+                        else:
+                            extracted_text_content = str(extracted)
+                    else:
+                        extracted_text_content = str(extracted)
+                    
+                    all_extracted_text.append(f"--- Page {page_num + 1} ---\n{extracted_text_content}")
+                    print(f"    ✅ Extracted {len(extracted_text_content)} characters")
                 else:
                     print(f"    ❌ Qwen API error: {response.status_code}")
                     print(f"       {response.text[:200]}")
