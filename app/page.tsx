@@ -276,7 +276,21 @@ export default function HomePage() {
                             </Badge>
                           </div>
                         </div>
-                        <div className={`w-3 h-3 rounded-full ${getStatusIcon(result.status)}`} />
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const text = `${result.test_name}: ${result.value} ${result.unit}. ${result.patient_explanation} ${result.next_steps}`
+                              generateSpeech(text)
+                            }}
+                            disabled={isSpeaking}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            <Volume2 className="h-4 w-4" />
+                          </Button>
+                          <div className={`w-3 h-3 rounded-full ${getStatusIcon(result.status)}`} />
+                        </div>
                       </div>
                       
                       <div className="grid md:grid-cols-2 gap-4">
