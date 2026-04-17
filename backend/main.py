@@ -463,18 +463,24 @@ async def call_qwen_max(lab_data: List[Dict], language: str) -> List[Dict]:
                 {
                     "role": "user",
                     "content": f"""
-You are a clinical lab analyst AI. For each lab test result below, provide:
+You are a clinical lab analyst AI. For each lab test result below, provide explanations in the specified language.
+
+Language: {language}
+
+For each lab test result, provide:
 - severity_tier (None/Mild/Moderate/Severe based on clinical significance)
-- patient_explanation (1-2 sentences, plain language, 8th-grade reading level, non-diagnostic)
-- next_steps (actionable, safe, specific to result)
+- patient_explanation (1-2 sentences, plain language, 8th-grade reading level, non-diagnostic, in {language})
+- next_steps (actionable, safe, specific to result, in {language})
 
 Lab data:
 {lab_data_json}
 
 Return results in JSON format as a list of objects with the same order as input.
-Language: {language}
 
-IMPORTANT: Do not diagnose or prescribe. Focus on education and safe guidance.
+IMPORTANT:
+- ALL explanations and next_steps MUST be in {language}
+- Do not diagnose or prescribe. Focus on education and safe guidance.
+- Use simple, clear language appropriate for patients.
 """
                 }
             ]
@@ -514,39 +520,99 @@ IMPORTANT: Do not diagnose or prescribe. Focus on education and safe guidance.
         return enhance_lab_data_with_fallback(lab_data, language)
 
 def enhance_lab_data_with_fallback(lab_data: List[Dict], language: str) -> List[Dict]:
-    """Fallback enhancement when API is unavailable"""
+    """Fallback enhancement when API is unavailable - supports multiple languages"""
     
+    # Multilingual fallback explanations
     fallback_explanations = {
-        "Hemoglobin": {
-            "patient_explanation": "Your hemoglobin level is within the normal range. This protein in your red blood cells carries oxygen throughout your body.",
-            "next_steps": "Continue with your regular health routine. No action needed."
+        "en": {
+            "Hemoglobin": {
+                "patient_explanation": "Your hemoglobin level is within the normal range. This protein in your red blood cells carries oxygen throughout your body.",
+                "next_steps": "Continue with your regular health routine. No action needed."
+            },
+            "HbA1c": {
+                "patient_explanation": "Your HbA1c is elevated, showing your average blood sugar over the past 2-3 months. This suggests prediabetes.",
+                "next_steps": "Consider dietary changes, increase physical activity, and discuss with your doctor at your next visit."
+            },
+            "Cholesterol": {
+                "patient_explanation": "Your cholesterol is elevated. High cholesterol can increase your risk of heart disease over time.",
+                "next_steps": "Reduce saturated fats, increase fiber-rich foods, and schedule a follow-up with your healthcare provider."
+            },
+            "White Blood Cells": {
+                "patient_explanation": "Your white blood cell count is low. These cells help fight infections.",
+                "next_steps": "Monitor for signs of infection and discuss with your doctor if you feel unwell."
+            }
         },
-        "HbA1c": {
-            "patient_explanation": "Your HbA1c is elevated, showing your average blood sugar over the past 2-3 months. This suggests prediabetes.",
-            "next_steps": "Consider dietary changes, increase physical activity, and discuss with your doctor at your next visit."
+        "fr": {
+            "Hemoglobin": {
+                "patient_explanation": "Votre taux d'hémoglobine est dans la plage normale. Cette protéine dans vos globules rouges transporte l'oxygène dans tout votre corps.",
+                "next_steps": "Continuez votre routine de santé habituelle. Aucune action nécessaire."
+            },
+            "HbA1c": {
+                "patient_explanation": "Votre HbA1c est élevé, montrant votre glycémie moyenne sur les 2-3 derniers mois. Cela suggère un prédiabète.",
+                "next_steps": "Envisagez des changements alimentaires, augmentez l'activité physique et discutez-en avec votre médecin."
+            },
+            "Cholesterol": {
+                "patient_explanation": "Votre cholestérol est élevé. Un cholestérol élevé peut augmenter votre risque de maladie cardiaque.",
+                "next_steps": "Réduisez les graisses saturées, augmentez les aliments riches en fibres et consultez votre médecin."
+            },
+            "White Blood Cells": {
+                "patient_explanation": "Votre nombre de globules blancs est faible. Ces cellules aident à combattre les infections.",
+                "next_steps": "Surveillez les signes d'infection et consultez votre médecin si vous ne vous sentez pas bien."
+            }
         },
-        "Cholesterol": {
-            "patient_explanation": "Your cholesterol is elevated. High cholesterol can increase your risk of heart disease over time.",
-            "next_steps": "Reduce saturated fats, increase fiber-rich foods, and schedule a follow-up with your healthcare provider."
+        "ar": {
+            "Hemoglobin": {
+                "patient_explanation": "مستوى الهيموجلوبين لديك ضمن المعدل الطبيعي. هذا البروتين في خلايا الدم الحمراء ينقل الأكسجين في جميع أنحاء الجسم.",
+                "next_steps": "استمر في روتينك الصحي المعتاد. لا حاجة لأي إجراء."
+            },
+            "HbA1c": {
+                "patient_explanation": "مستوى HbA1c مرتفع، مما يظهر متوسط السكر في الدم خلال الشهرين أو الثلاثة أشهر الماضية.",
+                "next_steps": "فكر في تغييرات غذائية، وزد النشاط البدني، وتحدث مع طبيبك في زيارتك القادمة."
+            },
+            "Cholesterol": {
+                "patient_explanation": "الكوليسترول لديك مرتفع. ارتفاع الكوليسترول يمكن أن يزيد خطر الإصابة بأمراض القلب.",
+                "next_steps": "قلل الدهون المشبعة، وزد الأطعمة الغنية بالألياف، وراجع طبيبك."
+            },
+            "White Blood Cells": {
+                "patient_explanation": "عدد خلايا الدم البيضاء لديك منخفض. هذه الخلايا تساعد في مكافحة العدوى.",
+                "next_steps": "راقب علامات العدوى وتحدث مع طبيبك إذا شعرت بتوعك."
+            }
         },
-        "White Blood Cells": {
-            "patient_explanation": "Your white blood cell count is low. These cells help fight infections.",
-            "next_steps": "Monitor for signs of infection and discuss with your doctor if you feel unwell."
+        "vn": {
+            "Hemoglobin": {
+                "patient_explanation": "Mức hemoglobin của bạn nằm trong phạm vi bình thường. Protein này trong hồng cầu vận chuyển oxy khắp cơ thể.",
+                "next_steps": "Tiếp tục thói quen sức khỏe thường xuyên của bạn. Không cần hành động nào."
+            },
+            "HbA1c": {
+                "patient_explanation": "HbA1c của bạn cao, cho thấy mức đường huyết trung bình trong 2-3 tháng qua.",
+                "next_steps": "Cân nhắc thay đổi chế độ ăn, tăng hoạt động thể chất và thảo luận với bác sĩ."
+            },
+            "Cholesterol": {
+                "patient_explanation": "Cholesterol của bạn cao. Cholesterol cao có thể làm tăng nguy cơ bệnh tim.",
+                "next_steps": "Giảm chất béo bão hòa, tăng thực phẩm giàu chất xơ và gặp bác sĩ."
+            },
+            "White Blood Cells": {
+                "patient_explanation": "Số lượng bạch cầu của bạn thấp. Những tế bào này giúp chống nhiễm trùng.",
+                "next_steps": "Theo dõi dấu hiệu nhiễm trùng và thảo luận với bác sĩ nếu bạn cảm thấy không khỏe."
+            }
         }
     }
+    
+    # Get language-specific explanations, fallback to English
+    lang_explanations = fallback_explanations.get(language, fallback_explanations["en"])
     
     enhanced_data = []
     for test in lab_data:
         test_name = test.get("test_name", "")
         
         # Find matching explanation
-        explanation = fallback_explanations.get("Hemoglobin", fallback_explanations.get("Hb"))
+        explanation = lang_explanations.get("Hemoglobin", lang_explanations.get("Hb"))
         if "A1c" in test_name:
-            explanation = fallback_explanations.get("HbA1c")
+            explanation = lang_explanations.get("HbA1c")
         elif "Cholesterol" in test_name:
-            explanation = fallback_explanations.get("Cholesterol")
+            explanation = lang_explanations.get("Cholesterol")
         elif "WBC" in test_name or "White" in test_name:
-            explanation = fallback_explanations.get("White Blood Cells")
+            explanation = lang_explanations.get("White Blood Cells")
         
         # Calculate severity
         severity = calculate_severity(test.get("value", 0), test.get("reference_range", ""))
