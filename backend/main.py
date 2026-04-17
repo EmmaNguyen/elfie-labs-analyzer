@@ -623,7 +623,15 @@ async def analyze_pdf(
         return JSONResponse(content={
             "success": True,
             "summary": summary,
-            "results": normalized_results
+            "results": normalized_results,
+            "debug": {
+                "pdf_size": len(pdf_content),
+                "qwen_vl_response_keys": list(qwen_vl_result.keys()) if isinstance(qwen_vl_result, dict) else "not_dict",
+                "lab_data_keys": list(lab_data.keys()) if isinstance(lab_data, dict) else "not_dict",
+                "lab_data_tests_count": len(lab_data.get('tests', [])) if isinstance(lab_data, dict) else 0,
+                "enhanced_results_count": len(enhanced_results),
+                "normalized_results_count": len(normalized_results)
+            }
         })
         
     except Exception as e:
