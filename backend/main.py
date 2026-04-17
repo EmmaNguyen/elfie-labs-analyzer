@@ -477,7 +477,21 @@ IMPORTANT: Do not diagnose or prescribe. Focus on education and safe guidance.
         content = result["output"]["choices"][0]["message"]["content"]
         enhanced_data = json.loads(content)
         
-        return enhanced_data
+        # Merge enhanced data with original data to preserve all fields
+        merged_data = []
+        for i, original_test in enumerate(lab_data):
+            if i < len(enhanced_data):
+                enhanced_test = enhanced_data[i]
+                # Start with original data, then add/override with enhanced fields
+                merged_test = {
+                    **original_test,  # Preserve original fields (value, unit, reference_range, status)
+                    **enhanced_test   # Add enhanced fields (severity_tier, patient_explanation, next_steps)
+                }
+                merged_data.append(merged_test)
+            else:
+                merged_data.append(original_test)
+        
+        return merged_data
         
     except (requests.exceptions.RequestException, json.JSONDecodeError, KeyError) as e:
         # Fallback to mock enhancements
