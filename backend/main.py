@@ -160,8 +160,14 @@ async def extract_text_from_pdf_bytes(pdf_content: bytes) -> str:
         raise HTTPException(status_code=400, detail=f"Error reading PDF: {str(e)}")
 
 
-async def extract_text_with_qwen_vl(pdf_content: bytes, language: str) -> str:
-    """Extract text from PDF using Qwen-VL (PDF → JPG → AI OCR)"""
+async def extract_text_with_qwen_vl(pdf_content: bytes, language: str, max_pages: int = None) -> str:
+    """Extract text from PDF using Qwen-VL (PDF → JPG → AI OCR)
+    
+    Args:
+        pdf_content: PDF file bytes
+        language: Language code
+        max_pages: Maximum number of pages to process (None = all pages, 1 = first page only)
+    """
     
     if not PDF2IMAGE_AVAILABLE:
         print("pdf2image not available, falling back to PyPDF2")
@@ -170,8 +176,14 @@ async def extract_text_with_qwen_vl(pdf_content: bytes, language: str) -> str:
     try:
         # Convert PDF pages to images
         print(f"Converting PDF to images...")
-        images = convert_from_bytes(pdf_content, dpi=200)
-        print(f"Converted {len(images)} pages to images")
+        
+        # If max_pages is 1, only convert first page for speed
+        if max_pages == 1:
+            images = convert_from_bytes(pdf_content, dpi=150, first_page=1, last_page=1)
+            print(f"Converted first page only (1 page)")
+        else:
+            images = convert_from_bytes(pdf_content, dpi=150)
+            print(f"Converted {len(images)} pages to images")
         
         headers = {
             "Authorization": f"Bearer {QWEN_API_KEY}",
@@ -183,9 +195,9 @@ async def extract_text_with_qwen_vl(pdf_content: bytes, language: str) -> str:
         for page_num, img in enumerate(images, 1):
             print(f"Processing page {page_num}/{len(images)} with Qwen-VL...")
             
-            # Convert image to bytes
+            # Convert image to bytes with lower quality for speed
             img_buffer = io.BytesIO()
-            img.save(img_buffer, format='JPEG', quality=85)
+            img.save(img_buffer, format='JPEG', quality=75)
             img_bytes = img_buffer.getvalue()
             
             # Convert to base64
@@ -313,12 +325,20 @@ IMPORTANT:
     return lab_data if isinstance(lab_data, list) else []
 
 
-async def call_qwen_vl(pdf_content: bytes, language: str) -> Dict[str, Any]:
-    """Extract lab data from PDF using Qwen-VL (PDF → JPG → AI) + Qwen-Max for parsing"""
+async def call_qwen_vl(pdf_content: bytes, language: str, first_page_only: bool = False) -> Dict[str, Any]:
+    """Extract lab data from PDF using Qwen-VL (PDF → JPG → AI) + Qwen-Max for parsing
+    
+    Args:
+        pdf_content: PDF file bytes
+        language: Language code
+        first_page_only: If True, only process first page (faster, for Vercel)
+    """
     
     try:
         # Step 1: Extract text from PDF using Qwen-VL (PDF → JPG → AI OCR)
-        pdf_text = await extract_text_with_qwen_vl(pdf_content, language)
+        # Use first page only for faster processing on Vercel
+        max_pages = 1 if first_page_only else None
+        pdf_text = await extract_text_with_qwen_vl(pdf_content, language, max_pages=max_pages)
         
         if not pdf_text.strip():
             raise ValueError("No text could be extracted from PDF")
