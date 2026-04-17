@@ -16,9 +16,13 @@ export default function HomePage() {
   const [showExportModal, setShowExportModal] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
 
   const generateSpeech = async (text: string) => {
     try {
+      // Stop any currently playing audio first
+      stopSpeaking()
+      
       setIsSpeaking(true)
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
       
@@ -42,8 +46,12 @@ export default function HomePage() {
       setAudioUrl(url)
       
       const audio = new Audio(url)
+      setCurrentAudio(audio)
       audio.play()
-      audio.onended = () => setIsSpeaking(false)
+      audio.onended = () => {
+        setIsSpeaking(false)
+        setCurrentAudio(null)
+      }
     } catch (error) {
       console.error('Error generating speech:', error)
       alert('Failed to generate speech. Please try again.')
@@ -52,6 +60,12 @@ export default function HomePage() {
   }
 
   const stopSpeaking = () => {
+    // Stop current audio playback
+    if (currentAudio) {
+      currentAudio.pause()
+      currentAudio.currentTime = 0
+      setCurrentAudio(null)
+    }
     setIsSpeaking(false)
     if (audioUrl) {
       URL.revokeObjectURL(audioUrl)
