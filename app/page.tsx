@@ -252,7 +252,12 @@ export default function HomePage() {
           <Card className="senior-card">
             <CardHeader className="pb-4 sm:pb-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <CardTitle className="text-2xl sm:text-4xl text-gray-800">Your Results</CardTitle>
+                <div>
+                  <CardTitle className="text-2xl sm:text-4xl text-gray-800">Your Results</CardTitle>
+                  <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2 font-semibold">
+                    🌍 Language: {languages.find(l => l.code === currentLanguage)?.name || 'English'}
+                  </p>
+                </div>
                 <div className="flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
                   <Button 
                     variant="outline" 
