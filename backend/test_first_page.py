@@ -83,7 +83,8 @@ async def test_first_page_extraction(pdf_path: str):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        pdf_path = os.path.expanduser("~/Downloads/DiaGfeb2026.pdf")
+        # Use test PDF from project directory
+        pdf_path = str(Path(__file__).parent.parent / "test_lab_results.pdf")
         print(f"No file specified, using default: {pdf_path}")
     else:
         pdf_path = sys.argv[1]
@@ -92,7 +93,10 @@ if __name__ == "__main__":
         print(f"Error: File not found: {pdf_path}")
         sys.exit(1)
     
-    # Set API key
-    os.environ.setdefault('QWEN_API_KEY', '${QWEN_API_KEY}')
+    # Load API key from environment
+    if not os.getenv('QWEN_API_KEY'):
+        print("Error: QWEN_API_KEY environment variable not set")
+        print("Please set it: export QWEN_API_KEY=your-api-key")
+        sys.exit(1)
     
     asyncio.run(test_first_page_extraction(pdf_path))
