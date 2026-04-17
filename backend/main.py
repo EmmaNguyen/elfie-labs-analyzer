@@ -5,9 +5,18 @@ import PyPDF2
 import io
 import json
 import requests
+import base64
 from typing import List, Dict, Any
 import os
 from datetime import datetime
+
+# Try to import pdf2image for PDF to JPG conversion
+try:
+    from pdf2image import convert_from_bytes
+    PDF2IMAGE_AVAILABLE = True
+except ImportError:
+    PDF2IMAGE_AVAILABLE = False
+    print("Warning: pdf2image not available. Install with: pip install pdf2image")
 
 app = FastAPI(title="Elfie AI Labs Analyzer API", version="1.0.0")
 
@@ -151,36 +160,106 @@ async def extract_text_from_pdf_bytes(pdf_content: bytes) -> str:
         raise HTTPException(status_code=400, detail=f"Error reading PDF: {str(e)}")
 
 
-async def call_qwen_vl(pdf_content: bytes, language: str) -> Dict[str, Any]:
-    """Extract lab data from PDF using text extraction + Qwen-Max for parsing"""
+async def extract_text_with_qwen_vl(pdf_content: bytes, language: str) -> str:
+    """Extract text from PDF using Qwen-VL (PDF → JPG → AI OCR)"""
+    
+    if not PDF2IMAGE_AVAILABLE:
+        print("pdf2image not available, falling back to PyPDF2")
+        return await extract_text_from_pdf_bytes(pdf_content)
     
     try:
-        # First, extract text from PDF
-        pdf_text = await extract_text_from_pdf_bytes(pdf_content)
+        # Convert PDF pages to images
+        print(f"Converting PDF to images...")
+        images = convert_from_bytes(pdf_content, dpi=200)
+        print(f"Converted {len(images)} pages to images")
         
-        if not pdf_text.strip():
-            raise ValueError("No text could be extracted from PDF")
-        
-        # Use Qwen-Max to parse the extracted text into structured lab data
         headers = {
             "Authorization": f"Bearer {QWEN_API_KEY}",
             "Content-Type": "application/json"
         }
         
-        payload = {
-            "model": "qwen-turbo",
-            "input": {
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": "You are a clinical lab data extraction AI. Extract ALL lab test results from the provided text."
-                    },
-                    {
-                        "role": "user",
-                        "content": f"""Extract ALL lab tests from this text and return as JSON array.
+        all_extracted_text = []
+        
+        for page_num, img in enumerate(images, 1):
+            print(f"Processing page {page_num}/{len(images)} with Qwen-VL...")
+            
+            # Convert image to bytes
+            img_buffer = io.BytesIO()
+            img.save(img_buffer, format='JPEG', quality=85)
+            img_bytes = img_buffer.getvalue()
+            
+            # Convert to base64
+            img_base64 = base64.b64encode(img_bytes).decode('utf-8')
+            
+            payload = {
+                "model": "qwen-vl-plus",
+                "input": {
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "image": f"data:image/jpeg;base64,{img_base64}"
+                                },
+                                {
+                                    "text": "Extract all text from this lab report image. Preserve the table structure and formatting. List all lab tests with their values, units, and reference ranges."
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+            
+            response = requests.post(QWEN_VL_URL, headers=headers, json=payload, timeout=60)
+            response.raise_for_status()
+            result = response.json()
+            
+            extracted = result["output"]["choices"][0]["message"]["content"]
+            
+            # Handle different response formats
+            if isinstance(extracted, list) and len(extracted) > 0:
+                if isinstance(extracted[0], dict) and 'text' in extracted[0]:
+                    extracted_text = extracted[0]['text']
+                else:
+                    extracted_text = str(extracted)
+            else:
+                extracted_text = str(extracted)
+            
+            all_extracted_text.append(f"--- Page {page_num} ---\n{extracted_text}")
+            print(f"  Extracted {len(extracted_text)} characters from page {page_num}")
+        
+        combined_text = "\n\n".join(all_extracted_text)
+        print(f"Total extracted: {len(combined_text)} characters from {len(images)} pages")
+        return combined_text
+        
+    except Exception as e:
+        print(f"Qwen-VL extraction failed: {e}")
+        print("Falling back to PyPDF2")
+        return await extract_text_from_pdf_bytes(pdf_content)
 
-Text from PDF:
-{pdf_text}
+
+async def parse_lab_data_with_qwen(page_text: str, language: str) -> List[Dict]:
+    """Parse lab data from a single page using Qwen-Max"""
+    
+    headers = {
+        "Authorization": f"Bearer {QWEN_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        "model": "qwen-turbo",
+        "input": {
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a clinical lab data extraction AI. Extract ALL lab test results from the provided text."
+                },
+                {
+                    "role": "user",
+                    "content": f"""Extract ALL lab tests from this text and return as JSON array.
+
+Text from PDF page:
+{page_text}
 
 For each test, extract:
 - test_name: exact test name from document
@@ -204,31 +283,67 @@ IMPORTANT:
 - Extract ALL tests found in the text, do not limit to common ones
 - If a value is like ">60" or "<5", extract the number and include the operator in value
 - If reference range is missing, use "Not provided"
-- Status should be: "Normal" if within range, "Low" if below, "High" if above, "Critical" if dangerously abnormal"""
-                    }
-                ]
-            },
-            "parameters": {
-                "result_format": "message"
-            }
+- Status should be: "Normal" if within range, "Low" if below, "High" if above, "Critical" if dangerously abnormal
+- Return an empty array [] if no lab tests are found on this page"""
+                }
+            ]
+        },
+        "parameters": {
+            "result_format": "message"
         }
+    }
+    
+    response = requests.post(QWEN_MAX_URL, headers=headers, json=payload, timeout=30)
+    response.raise_for_status()
+    result = response.json()
+    
+    # Parse the JSON response from Qwen
+    content = result["output"]["choices"][0]["message"]["content"]
+    
+    # Try to extract JSON from the response (it might be wrapped in markdown code blocks)
+    import re
+    json_match = re.search(r'\[\s*\{.*?\}\s*\]', content, re.DOTALL)
+    if json_match:
+        lab_data_json = json_match.group(0)
+        lab_data = json.loads(lab_data_json)
+    else:
+        # Try parsing the whole content as JSON
+        lab_data = json.loads(content)
+    
+    return lab_data if isinstance(lab_data, list) else []
+
+
+async def call_qwen_vl(pdf_content: bytes, language: str) -> Dict[str, Any]:
+    """Extract lab data from PDF using Qwen-VL (PDF → JPG → AI) + Qwen-Max for parsing"""
+    
+    try:
+        # Step 1: Extract text from PDF using Qwen-VL (PDF → JPG → AI OCR)
+        pdf_text = await extract_text_with_qwen_vl(pdf_content, language)
         
-        response = requests.post(QWEN_MAX_URL, headers=headers, json=payload, timeout=60)
-        response.raise_for_status()
-        result = response.json()
+        if not pdf_text.strip():
+            raise ValueError("No text could be extracted from PDF")
         
-        # Parse the JSON response from Qwen
-        content = result["output"]["choices"][0]["message"]["content"]
+        # Step 2: Parse each page separately to avoid timeout
+        print("Parsing extracted text page by page...")
         
-        # Try to extract JSON from the response (it might be wrapped in markdown code blocks)
-        import re
-        json_match = re.search(r'\[\s*\{.*?\}\s*\]', content, re.DOTALL)
-        if json_match:
-            lab_data_json = json_match.group(0)
-            lab_data = json.loads(lab_data_json)
-        else:
-            # Try parsing the whole content as JSON
-            lab_data = json.loads(content)
+        # Split text by pages
+        pages = pdf_text.split("--- Page ")
+        all_lab_data = []
+        
+        for i, page in enumerate(pages[1:], 1):  # Skip first empty split
+            page_text = f"--- Page {page}"
+            print(f"  Parsing page {i}...")
+            
+            try:
+                page_lab_data = await parse_lab_data_with_qwen(page_text, language)
+                if page_lab_data:
+                    all_lab_data.extend(page_lab_data)
+                    print(f"    Found {len(page_lab_data)} tests on page {i}")
+            except Exception as e:
+                print(f"    Error parsing page {i}: {e}")
+                continue
+        
+        print(f"Successfully extracted {len(all_lab_data)} lab tests total")
         
         # Wrap in the expected format
         return {
@@ -236,7 +351,7 @@ IMPORTANT:
                 "choices": [
                     {
                         "message": {
-                            "content": json.dumps(lab_data)
+                            "content": json.dumps(all_lab_data)
                         }
                     }
                 ]
