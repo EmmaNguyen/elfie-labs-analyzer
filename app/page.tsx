@@ -201,35 +201,35 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen warm-gradient">
-      <div className="container mx-auto py-12 px-4">
-        {/* Header - Simple, friendly language */}
-        <header className="text-center mb-16">
-          <div className="inline-block mb-6">
-            <span className="text-7xl">🏥</span>
+      <div className="container mx-auto py-6 px-4 sm:py-12 sm:px-4">
+        {/* Header - Responsive sizing */}
+        <header className="text-center mb-8 sm:mb-16">
+          <div className="inline-block mb-4 sm:mb-6">
+            <span className="text-5xl sm:text-7xl">🏥</span>
           </div>
-          <h1 className="text-6xl font-bold text-gray-800 mb-4 tracking-tight">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-gray-800 mb-3 sm:mb-4 tracking-tight px-2">
             Understand Your Lab Results
           </h1>
-          <div className="w-24 h-1 bg-blue-500 mx-auto mb-6 rounded-full"></div>
-          <p className="text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+          <div className="w-16 sm:w-24 h-1 bg-blue-500 mx-auto mb-4 sm:mb-6 rounded-full"></div>
+          <p className="text-lg sm:text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed px-4">
             Simple language with a voice
           </p>
         </header>
 
-      {/* Language Selector - Larger buttons with better styling */}
-      <div className="flex justify-center mb-12">
-        <Card className="w-fit senior-card">
-          <CardContent className="p-8">
-            <div className="flex items-center gap-6">
-              <Languages className="h-8 w-8 text-blue-600" />
-              <div className="flex gap-4">
+      {/* Language Selector - Responsive */}
+      <div className="flex justify-center mb-6 sm:mb-12">
+        <Card className="w-full sm:w-fit senior-card">
+          <CardContent className="p-4 sm:p-8">
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+              <Languages className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+              <div className="flex flex-wrap justify-center gap-2 sm:gap-4">
                 {languages.map((lang) => (
                   <Button
                     key={lang.code}
                     variant={currentLanguage === lang.code ? "default" : "outline"}
                     size="lg"
                     onClick={() => setCurrentLanguage(lang.code)}
-                    className={`text-lg px-8 py-6 ${
+                    className={`text-base sm:text-lg px-4 sm:px-8 py-4 sm:py-6 flex-1 sm:flex-initial ${
                       currentLanguage === lang.code 
                         ? 'shadow-lg' 
                         : 'hover:bg-white hover:shadow-md'
@@ -247,17 +247,17 @@ export default function HomePage() {
       {!analysisResults ? (
         <PDFUpload onFileUpload={handleFileUpload} isProcessing={isProcessing} />
       ) : (
-        <div className="space-y-10">
-          {/* Results Header - Simple language */}
+        <div className="space-y-6 sm:space-y-10">
+          {/* Results Header - Responsive */}
           <Card className="senior-card">
-            <CardHeader className="pb-6">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-4xl text-gray-800">Your Results</CardTitle>
-                <div className="flex gap-3">
+            <CardHeader className="pb-4 sm:pb-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <CardTitle className="text-2xl sm:text-4xl text-gray-800">Your Results</CardTitle>
+                <div className="flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
                   <Button 
                     variant="outline" 
                     size="lg" 
-                    className="text-lg px-6 py-5"
+                    className="text-sm sm:text-lg px-3 sm:px-6 py-3 sm:py-5 flex-1 sm:flex-initial"
                     onClick={() => {
                       if (isSpeaking) {
                         stopSpeaking()
@@ -272,103 +272,103 @@ export default function HomePage() {
                   >
                     {isSpeaking ? (
                       <>
-                        <VolumeX className="h-6 w-6 mr-2" />
-                        <span className="text-lg">Stop</span>
+                        <VolumeX className="h-4 w-4 sm:h-6 sm:w-6 mr-1 sm:mr-2" />
+                        <span className="text-sm sm:text-lg">Stop</span>
                       </>
                     ) : (
                       <>
-                        <Volume2 className="h-6 w-6 mr-2" />
-                        <span className="text-lg">Listen</span>
+                        <Volume2 className="h-4 w-4 sm:h-6 sm:w-6 mr-1 sm:mr-2" />
+                        <span className="text-sm sm:text-lg">Listen</span>
                       </>
                     )}
                   </Button>
-                  <Button variant="outline" size="lg" className="text-lg px-6 py-5" onClick={() => setShowExportModal(true)}>
-                    <Download className="h-6 w-6 mr-2" />
-                    Export
+                  <Button variant="outline" size="lg" className="text-sm sm:text-lg px-3 sm:px-6 py-3 sm:py-5 flex-1 sm:flex-initial" onClick={() => setShowExportModal(true)}>
+                    <Download className="h-4 w-4 sm:h-6 sm:w-6 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Export</span>
                   </Button>
-                  <Button variant="outline" size="lg" className="text-lg px-6 py-5" onClick={() => setShowExportModal(true)}>
-                    <Share2 className="h-6 w-6 mr-2" />
-                    Share
+                  <Button variant="outline" size="lg" className="text-sm sm:text-lg px-3 sm:px-6 py-3 sm:py-5 flex-1 sm:flex-initial" onClick={() => setShowExportModal(true)}>
+                    <Share2 className="h-4 w-4 sm:h-6 sm:w-6 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Share</span>
                   </Button>
                 </div>
               </div>
-              <CardDescription className="text-xl mt-2">
+              <CardDescription className="text-base sm:text-xl mt-2">
                 Here's what your blood tests show, explained in simple terms
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Summary Statistics - Simple labels */}
-              <div className="grid grid-cols-4 gap-8 mb-10">
-                <div className="text-center p-8 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border-2 border-gray-200 shadow-md">
-                  <div className="text-5xl font-bold text-gray-800 mb-3">
+              {/* Summary Statistics - Responsive grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-8 mb-6 sm:mb-10">
+                <div className="text-center p-4 sm:p-8 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border-2 border-gray-200 shadow-md">
+                  <div className="text-3xl sm:text-5xl font-bold text-gray-800 mb-1 sm:mb-3">
                     {analysisResults.summary.total_tests}
                   </div>
-                  <div className="text-xl font-semibold text-gray-700">Tests Done</div>
+                  <div className="text-sm sm:text-xl font-semibold text-gray-700">Tests Done</div>
                 </div>
-                <div className="text-center p-8 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl border-2 border-green-300 shadow-md">
-                  <div className="text-5xl font-bold text-green-700 mb-3">
+                <div className="text-center p-4 sm:p-8 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl border-2 border-green-300 shadow-md">
+                  <div className="text-3xl sm:text-5xl font-bold text-green-700 mb-1 sm:mb-3">
                     {analysisResults.summary.normal}
                   </div>
-                  <div className="text-xl font-semibold text-green-800">✓ Looking Good</div>
+                  <div className="text-sm sm:text-xl font-semibold text-green-800">✓ Looking Good</div>
                 </div>
-                <div className="text-center p-8 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl border-2 border-yellow-300 shadow-md">
-                  <div className="text-5xl font-bold text-yellow-700 mb-3">
+                <div className="text-center p-4 sm:p-8 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl border-2 border-yellow-300 shadow-md">
+                  <div className="text-3xl sm:text-5xl font-bold text-yellow-700 mb-1 sm:mb-3">
                     {analysisResults.summary.abnormal}
                   </div>
-                  <div className="text-xl font-semibold text-yellow-800">⚠ Needs Attention</div>
+                  <div className="text-sm sm:text-xl font-semibold text-yellow-800">⚠ Needs Attention</div>
                 </div>
-                <div className="text-center p-8 bg-gradient-to-br from-red-50 to-red-100 rounded-2xl border-2 border-red-300 shadow-md">
-                  <div className="text-5xl font-bold text-red-700 mb-3">
+                <div className="text-center p-4 sm:p-8 bg-gradient-to-br from-red-50 to-red-100 rounded-2xl border-2 border-red-300 shadow-md">
+                  <div className="text-3xl sm:text-5xl font-bold text-red-700 mb-1 sm:mb-3">
                     {analysisResults.summary.critical}
                   </div>
-                  <div className="text-xl font-semibold text-red-800">🔴 See Doctor Soon</div>
+                  <div className="text-sm sm:text-xl font-semibold text-red-800">🔴 See Doctor</div>
                 </div>
               </div>
 
-              <div className="text-lg text-gray-600 mb-4 font-medium">
+              <div className="text-base sm:text-lg text-gray-600 mb-4 font-medium">
                 Showing {analysisResults.results.length} test results below
               </div>
-              <div className="space-y-8">
+              <div className="space-y-4 sm:space-y-8">
                 {analysisResults.results.map((result: LabResult, index: number) => (
-                  <Card key={`${result.test_name}-${index}`} className="senior-card border-l-8 border-l-blue-500">
-                    <CardContent className="p-10">
-                      {/* Header with number, name, and value - Larger for seniors */}
-                      <div className="flex items-start justify-between mb-6">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-4 mb-3">
-                            <span className="flex items-center justify-center w-12 h-12 bg-blue-100 text-blue-800 rounded-full text-xl font-bold">
+                  <Card key={`${result.test_name}-${index}`} className="senior-card border-l-4 sm:border-l-8 border-l-blue-500">
+                    <CardContent className="p-4 sm:p-10">
+                      {/* Header with number, name, and value - Responsive */}
+                      <div className="flex flex-col sm:flex-row items-start justify-between mb-4 sm:mb-6">
+                        <div className="flex-1 w-full">
+                          <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-3">
+                            <span className="flex items-center justify-center w-8 h-8 sm:w-12 sm:h-12 bg-blue-100 text-blue-800 rounded-full text-base sm:text-xl font-bold flex-shrink-0">
                               {index + 1}
                             </span>
-                            <h3 className="text-2xl font-bold text-gray-900">
+                            <h3 className="text-lg sm:text-2xl font-bold text-gray-900">
                               {result.test_name}
                             </h3>
                           </div>
                           
-                          {/* Value, Unit, Reference Range, and Status - Larger text with better styling */}
-                          <div className="flex flex-wrap items-center gap-6 ml-16">
-                            <span className="text-5xl font-bold text-gray-900">
+                          {/* Value, Unit, Reference Range, and Status - Responsive */}
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-6 sm:ml-16">
+                            <span className="text-2xl sm:text-5xl font-bold text-gray-900">
                               {result.value}
                             </span>
-                            <span className="text-3xl text-gray-600 font-semibold">
+                            <span className="text-lg sm:text-3xl text-gray-600 font-semibold">
                               {result.unit}
                             </span>
-                            <span className="text-3xl text-gray-400">|</span>
-                            <span className="text-xl text-gray-600">
-                              Ref: <span className="font-bold text-gray-800 text-lg">{result.reference_range}</span>
+                            <span className="text-lg sm:text-3xl text-gray-400">|</span>
+                            <span className="text-sm sm:text-xl text-gray-600 w-full sm:w-auto">
+                              Ref: <span className="font-bold text-gray-800">{result.reference_range}</span>
                             </span>
-                            <Badge className={`${getStatusColor(result.status)} text-white text-lg px-5 py-2.5 shadow-sm`}>
+                            <Badge className={`${getStatusColor(result.status)} text-white text-sm sm:text-lg px-3 sm:px-5 py-1.5 sm:py-2.5 shadow-sm`}>
                               {result.status}
                             </Badge>
                             {result.severity_tier !== 'None' && (
-                              <Badge className={`${getSeverityColor(result.severity_tier)} text-lg px-5 py-2.5 shadow-sm`}>
+                              <Badge className={`${getSeverityColor(result.severity_tier)} text-sm sm:text-lg px-3 sm:px-5 py-1.5 sm:py-2.5 shadow-sm`}>
                                 {result.severity_tier}
                               </Badge>
                             )}
                           </div>
                         </div>
                         
-                        {/* Voice button - Larger for seniors */}
-                        <div className="flex items-center gap-2">
+                        {/* Voice button - Responsive */}
+                        <div className="flex items-center gap-2 mt-3 sm:mt-0">
                           <Button
                             variant="outline"
                             size="lg"
@@ -377,7 +377,7 @@ export default function HomePage() {
                               generateSpeech(text)
                             }}
                             disabled={isSpeaking}
-                            className="text-blue-700 hover:bg-blue-50 border-2 border-blue-600"
+                            className="text-blue-700 hover:bg-blue-50 border-2 border-blue-600 text-sm sm:text-base px-3 sm:px-6 py-2 sm:py-5"
                           >
                             <Volume2 className="h-6 w-6 mr-2" />
                             <span className="text-lg">Listen</span>
@@ -385,23 +385,23 @@ export default function HomePage() {
                         </div>
                       </div>
                       
-                      {/* Explanation and Next Steps - Simple, friendly language */}
-                      <div className="grid md:grid-cols-2 gap-8 ml-16 mt-8">
-                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-2xl border-2 border-blue-200 shadow-sm">
-                          <h4 className="font-bold text-blue-900 mb-4 text-xl flex items-center gap-3">
-                            <span className="text-2xl">💡</span>
+                      {/* Explanation and Next Steps - Responsive */}
+                      <div className="grid md:grid-cols-2 gap-4 sm:gap-8 mt-4 sm:mt-8 sm:ml-16">
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 sm:p-8 rounded-2xl border-2 border-blue-200 shadow-sm">
+                          <h4 className="font-bold text-blue-900 mb-2 sm:mb-4 text-base sm:text-xl flex items-center gap-2 sm:gap-3">
+                            <span className="text-xl sm:text-2xl">💡</span>
                             What This Means for You
                           </h4>
-                          <p className="text-lg text-blue-800 leading-relaxed">
+                          <p className="text-sm sm:text-lg text-blue-800 leading-relaxed">
                             {result.patient_explanation}
                           </p>
                         </div>
-                        <div className="bg-gradient-to-br from-green-50 to-green-100 p-8 rounded-2xl border-2 border-green-200 shadow-sm">
-                          <h4 className="font-bold text-green-900 mb-4 text-xl flex items-center gap-3">
-                            <span className="text-2xl">👉</span>
+                        <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 sm:p-8 rounded-2xl border-2 border-green-200 shadow-sm">
+                          <h4 className="font-bold text-green-900 mb-2 sm:mb-4 text-base sm:text-xl flex items-center gap-2 sm:gap-3">
+                            <span className="text-xl sm:text-2xl">👉</span>
                             What You Should Do
                           </h4>
-                          <p className="text-lg text-green-800 leading-relaxed">
+                          <p className="text-sm sm:text-lg text-green-800 leading-relaxed">
                             {result.next_steps}
                           </p>
                         </div>
